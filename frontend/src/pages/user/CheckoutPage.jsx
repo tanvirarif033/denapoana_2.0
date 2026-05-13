@@ -399,28 +399,37 @@ ${shippingData.city}
                 </div>
 
 
-                {/* CITY */}
-                <div className="col-md-6 mb-3">
+              {/* CITY */}
+            <div className="col-md-6 mb-3">
 
-                  <input
-                    type="text"
+     <input
+    type="text"
 
-                    className="form-control"
+    className="form-control"
 
-                    placeholder="City"
+    placeholder="Enter City"
 
-                    name="city"
+    name="city"
 
-                    value={
-                      shippingData.city
-                    }
+    value={
+      shippingData.city
+    }
 
-                    onChange={
-                      handleChange
-                    }
-                  />
+    onChange={
+      handleChange
+    }
+  />
 
-                </div>
+  <small className="text-muted">
+
+    Dhaka City Delivery:
+    Tk 70 |
+    Other Cities:
+    Tk 120
+
+  </small>
+
+</div>
 
 
                 {/* AREA */}

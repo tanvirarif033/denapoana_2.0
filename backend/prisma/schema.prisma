@@ -6,6 +6,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 enum Role {
   USER
   ADMIN
@@ -20,116 +21,120 @@ enum OrderStatus {
 }
 
 model User {
-  id             String      @id @default(cuid())
-  name           String
-  email          String      @unique
-  phone          String?
-  password       String
-  role           Role        @default(USER)
-  address        String?
-  profileImage   String?
-  createdAt      DateTime    @default(now())
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  password     String
+  role         Role     @default(USER)
+  address      String?
+  profileImage String?
+  createdAt    DateTime @default(now())
 
-  reviews        Review[]
-  wishlist       Wishlist[]
-  cart           Cart[]
-  orders         Order[]
+  reviews  Review[]
+  wishlist Wishlist[]
+  cart     Cart[]
+  orders   Order[]
 }
 
 model Category {
-  id          String      @id @default(cuid())
-  name        String
-  slug        String      @unique
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
 
-  products    Product[]
+  products Product[]
 }
 
 model Product {
-  id            String      @id @default(cuid())
-  title         String
-  description   String
-  price         Float
-  stock         Int
-  images        String[]
-  rating        Float       @default(0)
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  stock       Int
+  images      String[]
+  rating      Float    @default(0)
 
-  categoryId    String
-  category      Category    @relation(fields: [categoryId], references: [id])
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
 
-  reviews       Review[]
-  wishlist      Wishlist[]
-  cart          Cart[]
-  orderItems    OrderItem[]
+  reviews    Review[]
+  wishlist   Wishlist[]
+  cart       Cart[]
+  orderItems OrderItem[]
 
-  createdAt     DateTime    @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Review {
-  id          String      @id @default(cuid())
-  rating      Int
-  comment     String
-  reply       String?
+  id      String  @id @default(cuid())
+  rating  Int
+  comment String
+  reply   String?
 
-  userId      String
-  productId   String
+  userId    String
+  productId String
 
-  user        User        @relation(fields: [userId], references: [id])
-  product     Product     @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
-  createdAt   DateTime    @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Wishlist {
-  id          String      @id @default(cuid())
+  id String @id @default(cuid())
 
-  userId      String
-  productId   String
+  userId    String
+  productId String
 
-  user        User        @relation(fields: [userId], references: [id])
-  product     Product     @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
 }
 
 model Cart {
-  id          String      @id @default(cuid())
+  id String @id @default(cuid())
 
-  quantity    Int         @default(1)
+  quantity Int @default(1)
 
-  userId      String
-  productId   String
+  userId    String
+  productId String
 
-  user        User        @relation(fields: [userId], references: [id])
-  product     Product     @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
 }
 
 model Order {
-  id              String          @id @default(cuid())
+  id String @id @default(cuid())
 
-  totalPrice      Float
+  totalPrice Float
 
-  paymentMethod   String
-  paymentStatus   Boolean         @default(false)
+  paymentMethod String
+  paymentStatus Boolean @default(false)
 
-  orderStatus     OrderStatus     @default(PENDING)
+  orderStatus OrderStatus @default(PENDING)
 
-  address         String
+  address String
 
-  userId          String
-  user            User            @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  orderItems      OrderItem[]
+  orderItems OrderItem[]
 
-  createdAt       DateTime        @default(now())
+  createdAt DateTime @default(now())
 }
 
 model OrderItem {
-  id            String      @id @default(cuid())
+  id String @id @default(cuid())
 
-  quantity      Int
-  price         Float
+  quantity Int
+  price    Float
 
-  orderId       String
-  productId     String
+  orderId   String
+  productId String
 
-  order         Order       @relation(fields: [orderId], references: [id])
-  product       Product     @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }

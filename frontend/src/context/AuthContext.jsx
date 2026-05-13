@@ -5,69 +5,197 @@ import {
   useState
 } from "react";
 
+
+
 const AuthContext =
   createContext();
 
 
-// provider
+
 export function AuthProvider({
   children
 }) {
 
-  const [user, setUser] =
-    useState(null);
+  // =========================
+  // STATES
+  // =========================
 
-  // load user
+  const [token, setToken] =
+    useState(
+
+      localStorage.getItem(
+        "token"
+      ) || null
+    );
+
+
+  const [user, setUser] =
+    useState(
+
+      JSON.parse(
+
+        localStorage.getItem(
+          "user"
+        )
+      ) || null
+    );
+
+
+  const [loading,
+    setLoading] =
+    useState(true);
+
+
+
+
+  // =========================
+  // LOAD USER
+  // =========================
+
   useEffect(() => {
 
-    const storedUser =
-      localStorage.getItem("user");
+    const storedToken =
+      localStorage.getItem(
+        "token"
+      );
 
-    if (storedUser) {
+    const storedUser =
+      localStorage.getItem(
+        "user"
+      );
+
+
+    if (
+      storedToken &&
+      storedUser
+    ) {
+
+      setToken(
+        storedToken
+      );
 
       setUser(
-        JSON.parse(storedUser)
+
+        JSON.parse(
+          storedUser
+        )
       );
     }
 
+    setLoading(false);
+
   }, []);
 
-  // login
-  const login = (
-    token,
-    userData
-  ) => {
 
-    localStorage.setItem(
-      "token",
-      token
-    );
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(userData)
-    );
 
-    setUser(userData);
-  };
+  // =========================
+  // LOGIN
+  // =========================
 
-  // logout
+  const login =
+    (
+      newToken,
+      newUser
+    ) => {
+
+      // save storage
+      localStorage.setItem(
+
+        "token",
+
+        newToken
+      );
+
+      localStorage.setItem(
+
+        "user",
+
+        JSON.stringify(
+          newUser
+        )
+      );
+
+      // update state
+      setToken(
+        newToken
+      );
+
+      setUser(
+        newUser
+      );
+    };
+
+
+
+
+  // =========================
+  // UPDATE USER
+  // =========================
+
+  const updateUser =
+    (updatedUser) => {
+
+      // update storage
+      localStorage.setItem(
+
+        "user",
+
+        JSON.stringify(
+          updatedUser
+        )
+      );
+
+      // update state
+      setUser(
+        updatedUser
+      );
+    };
+
+
+
+
+  // =========================
+  // LOGOUT
+  // =========================
+
   const logout = () => {
 
-    localStorage.removeItem("token");
+    // clear storage
+    localStorage.removeItem(
+      "token"
+    );
 
-    localStorage.removeItem("user");
+    localStorage.removeItem(
+      "user"
+    );
+
+    // clear state
+    setToken(null);
 
     setUser(null);
   };
+
+
+
 
   return (
 
     <AuthContext.Provider
       value={{
+
+        token,
         user,
+
         login,
-        logout
+        logout,
+
+        updateUser,
+
+        isAuthenticated:
+          !!token,
+
+        loading
       }}
     >
 
@@ -78,6 +206,12 @@ export function AuthProvider({
 }
 
 
-// hook
-export const useAuth = () =>
-  useContext(AuthContext);
+
+// =========================
+// CUSTOM HOOK
+// =========================
+
+export const useAuth =
+  () => useContext(
+    AuthContext
+  );

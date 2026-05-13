@@ -6,15 +6,49 @@ import {
   useAuth
 } from "../context/AuthContext";
 
+
+
 function ProtectedRoute({
   children
 }) {
 
-  const { user } = useAuth();
+  const {
+    isAuthenticated,
+    loading
+  } = useAuth();
 
-  if (!user) {
-    return <Navigate to="/login" />;
+
+  // loading
+  if (loading) {
+
+    return (
+
+      <div
+        className="
+        d-flex
+        justify-content-center
+        align-items-center
+        vh-100
+        "
+      >
+
+        <h3>
+          Loading...
+        </h3>
+
+      </div>
+    );
   }
+
+
+  // not logged in
+  if (!isAuthenticated) {
+
+    return (
+      <Navigate to="/login" />
+    );
+  }
+
 
   return children;
 }

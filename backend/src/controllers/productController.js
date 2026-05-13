@@ -1,351 +1,549 @@
-const prisma = require("../config/prisma");
+const prisma =
+  require("../config/prisma");
 
 const cloudinary =
   require("../config/cloudinary");
 
 
+
+// =====================================
 // CREATE PRODUCT
-const createProduct = async (req, res) => {
+// =====================================
 
-  try {
+const createProduct =
+async (req,res)=>{
 
-    const {
-      title,
-      description,
-      price,
-      stock,
-      categoryId
-    } = req.body;
+try{
 
-    // validation
-    if (
-      !title ||
-      !description ||
-      !price ||
-      !stock ||
-      !categoryId
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields required"
-      });
-    }
+const{
+title,
+description,
+price,
+stock,
+category
+}=req.body;
 
-    // image required
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "Product image required"
-      });
-    }
 
-    // upload image
-    const base64 =
-      req.file.buffer.toString("base64");
 
-    const dataURI =
-      `data:${req.file.mimetype};base64,${base64}`;
+// validation
+if(
+!title ||
+!description ||
+!price ||
+!stock ||
+!category
+){
 
-    const uploadedImage =
-      await cloudinary.uploader.upload(
-        dataURI,
-        {
-          folder: "denpoana_products"
-        }
-      );
+return res.status(400).json({
 
-    // create product
-    const product =
-      await prisma.product.create({
-        data: {
-          title,
-          description,
-          price: parseFloat(price),
-          stock: parseInt(stock),
+success:false,
+message:"All fields required"
 
-          images: [uploadedImage.secure_url],
+});
 
-          categoryId
-        }
-      });
+}
 
-    res.status(201).json({
-      success: true,
-      message: "Product created",
-      product
-    });
 
-  } catch (error) {
 
-    console.log(error);
+// category find
+const categoryData=
+await prisma.category.findFirst({
 
-    res.status(500).json({
-      success: false,
-      message: "Server Error"
-    });
-  }
+where:{
+name:category
+}
+
+});
+
+
+if(!categoryData){
+
+return res.status(404).json({
+
+success:false,
+message:"Category not found"
+});
+
+}
+
+
+
+// upload images
+const imageUrls=[];
+
+
+if(req.files?.length>0){
+
+for(const file of req.files){
+
+const base64=
+file.buffer.toString(
+"base64"
+);
+
+
+const dataURI=
+`data:${file.mimetype};base64,${base64}`;
+
+
+
+const uploaded=
+await cloudinary.uploader.upload(
+
+dataURI,
+
+{
+folder:
+"denpoana_products"
+}
+
+);
+
+
+
+imageUrls.push(
+uploaded.secure_url
+);
+
+}
+
+}
+
+
+
+const product=
+await prisma.product.create({
+
+data:{
+
+title,
+
+description,
+
+price:
+parseFloat(price),
+
+stock:
+parseInt(stock),
+
+images:
+imageUrls,
+
+categoryId:
+categoryData.id
+
+}
+
+});
+
+
+
+res.status(201).json({
+
+success:true,
+
+message:
+"Product Created Successfully",
+
+product
+
+});
+
+
+}catch(error){
+
+console.log(error);
+
+res.status(500).json({
+
+success:false,
+message:error.message
+
+});
+
+}
+
 };
 
 
-// GET ALL PRODUCTS
-const getProducts = async (req, res) => {
 
-  try {
 
-    const page = Number(req.query.page) || 1;
 
-    const limit = 6;
+// =====================================
+// GET PRODUCTS
+// =====================================
 
-    const skip = (page - 1) * limit;
+const getProducts=
+async(req,res)=>{
 
-    // filters
-    const search = req.query.search || "";
+try{
 
-    const category = req.query.category || "";
 
-    const sort = req.query.sort || "";
+const{
+search="",
+page=1,
+category=""
+}=req.query;
 
-    // dynamic filter
-    let where = {};
 
-    // search
-    if (search) {
-      where.title = {
-        contains: search,
-        mode: "insensitive"
-      };
-    }
+const limit=10;
 
-    // category
-    if (category) {
-      where.category = {
-        slug: category
-      };
-    }
+const skip=
+(page-1)*limit;
 
-    // sorting
-    let orderBy = {};
 
-    if (sort === "low") {
-      orderBy.price = "asc";
-    }
 
-    if (sort === "high") {
-      orderBy.price = "desc";
-    }
+const where={
 
-    // get products
-    const products =
-      await prisma.product.findMany({
-        where,
+title:{
+contains:search,
+mode:"insensitive"
+},
 
-        include: {
-          category: true
-        },
+...(category && {
 
-        orderBy,
+category:{
+name:category
+}
 
-        skip,
+})
 
-        take: limit
-      });
-
-    // total count
-    const totalProducts =
-      await prisma.product.count({
-        where
-      });
-
-    res.status(200).json({
-      success: true,
-
-      currentPage: page,
-
-      totalPages:
-        Math.ceil(totalProducts / limit),
-
-      totalProducts,
-
-      products
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error"
-    });
-  }
 };
 
 
+
+const products=
+await prisma.product.findMany({
+
+where,
+
+include:{
+category:true
+},
+
+skip,
+
+take:limit,
+
+orderBy:{
+createdAt:"desc"
+}
+
+});
+
+
+
+const total=
+await prisma.product.count({
+where
+});
+
+
+
+res.status(200).json({
+
+success:true,
+
+products,
+
+totalPages:
+Math.ceil(
+total/limit
+)
+
+});
+
+
+
+}catch(error){
+
+console.log(error);
+
+res.status(500).json({
+
+success:false,
+message:"Server Error"
+
+});
+
+}
+
+};
+
+
+
+
+// =====================================
 // GET SINGLE PRODUCT
-const getSingleProduct = async (req, res) => {
+// =====================================
 
-  try {
+const getSingleProduct=
+async(req,res)=>{
 
-    const { id } = req.params;
+try{
 
-    const product =
-      await prisma.product.findUnique({
-        where: {
-          id
-        },
 
-        include: {
-          category: true,
+const product=
+await prisma.product.findUnique({
 
-          reviews: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                  profileImage: true
-                }
-              }
-            }
-          }
-        }
-      });
+where:{
 
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found"
-      });
-    }
+id:req.params.id
 
-    res.status(200).json({
-      success: true,
-      product
-    });
+},
 
-  } catch (error) {
+include:{
 
-    console.log(error);
+category:true
 
-    res.status(500).json({
-      success: false,
-      message: "Server Error"
-    });
-  }
+}
+
+});
+
+
+
+if(!product){
+
+return res.status(404).json({
+
+success:false,
+
+message:
+"Product Not Found"
+
+});
+
+}
+
+
+
+res.status(200).json({
+
+success:true,
+
+product
+
+});
+
+
+
+}catch(error){
+
+console.log(error);
+
+res.status(500).json({
+
+success:false,
+message:"Server Error"
+
+});
+
+}
+
 };
 
 
+
+
+// =====================================
 // UPDATE PRODUCT
-const updateProduct = async (req, res) => {
+// =====================================
 
-  try {
+const updateProduct=
+async(req,res)=>{
 
-    const { id } = req.params;
+try{
 
-    const {
-      title,
-      description,
-      price,
-      stock,
-      categoryId
-    } = req.body;
 
-    let imageUrl;
+const{
+title,
+description,
+price,
+stock,
+category
+}=req.body;
 
-    // upload new image if exists
-    if (req.file) {
 
-      const base64 =
-        req.file.buffer.toString("base64");
 
-      const dataURI =
-        `data:${req.file.mimetype};base64,${base64}`;
+let imageUrls=[];
 
-      const uploadedImage =
-        await cloudinary.uploader.upload(
-          dataURI,
-          {
-            folder: "denpoana_products"
-          }
-        );
 
-      imageUrl =
-        uploadedImage.secure_url;
-    }
+// upload new images
+if(req.files?.length>0){
 
-    const updatedProduct =
-      await prisma.product.update({
-        where: {
-          id
-        },
+for(const file of req.files){
 
-        data: {
-          title,
-          description,
+const base64=
+file.buffer.toString(
+"base64");
 
-          price: parseFloat(price),
 
-          stock: parseInt(stock),
+const dataURI=
+`data:${file.mimetype};base64,${base64}`;
 
-          categoryId,
 
-          ...(imageUrl && {
-            images: [imageUrl]
-          })
-        }
-      });
 
-    res.status(200).json({
-      success: true,
-      message: "Product updated",
-      updatedProduct
-    });
+const uploaded=
+await cloudinary.uploader.upload(
 
-  } catch (error) {
+dataURI,
 
-    console.log(error);
+{
+folder:
+"denpoana_products"
+}
 
-    res.status(500).json({
-      success: false,
-      message: "Server Error"
-    });
-  }
+);
+
+
+imageUrls.push(
+uploaded.secure_url
+);
+
+}
+
+}
+
+
+
+// category find
+const categoryData=
+await prisma.category.findFirst({
+
+where:{
+name:category
+}
+
+});
+
+
+
+const updated=
+await prisma.product.update({
+
+where:{
+id:req.params.id
+},
+
+data:{
+
+title,
+
+description,
+
+price:
+parseFloat(price),
+
+stock:
+parseInt(stock),
+
+...(categoryData && {
+
+categoryId:
+categoryData.id
+
+}),
+
+
+...(imageUrls.length>0 && {
+
+images:
+imageUrls
+
+})
+
+}
+
+});
+
+
+
+res.status(200).json({
+
+success:true,
+
+message:
+"Product Updated",
+
+updated
+
+});
+
+
+
+}catch(error){
+
+console.log(error);
+
+res.status(500).json({
+
+success:false,
+message:error.message
+
+});
+
+}
+
 };
 
 
+
+
+// =====================================
 // DELETE PRODUCT
-const deleteProduct = async (req, res) => {
+// =====================================
 
-  try {
+const deleteProduct=
+async(req,res)=>{
 
-    const { id } = req.params;
+try{
 
-    await prisma.product.delete({
-      where: {
-        id
-      }
-    });
 
-    res.status(200).json({
-      success: true,
-      message: "Product deleted"
-    });
+await prisma.product.delete({
 
-  } catch (error) {
+where:{
 
-    console.log(error);
+id:req.params.id
 
-    res.status(500).json({
-      success: false,
-      message: "Server Error"
-    });
-  }
+}
+
+});
+
+
+
+res.status(200).json({
+
+success:true,
+
+message:
+"Product Deleted"
+
+});
+
+
+}catch(error){
+
+console.log(error);
+
+res.status(500).json({
+
+success:false,
+message:"Server Error"
+
+});
+
+}
+
 };
 
 
-module.exports = {
-  createProduct,
-  getProducts,
-  getSingleProduct,
-  updateProduct,
-  deleteProduct
+
+module.exports={
+
+createProduct,
+getProducts,
+getSingleProduct,
+updateProduct,
+deleteProduct
+
 };
