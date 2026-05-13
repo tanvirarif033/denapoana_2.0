@@ -17,6 +17,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const userRoutes = require("./routes/userRoutes");
 const aiRoutes = require("./routes/aiRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 const app = express();
 
 app.use(cors({
@@ -52,6 +53,10 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/users", userRoutes);
 
 app.use("/api/ai", aiRoutes);
+app.use(
+  "/api/payments",
+  paymentRoutes
+);
 
 app.get("/", (req, res) => {
   res.json({

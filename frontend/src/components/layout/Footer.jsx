@@ -14,7 +14,7 @@ function Footer() {
       <div className="container text-center">
 
         <h5>
-          DenPoana 2.0
+          DenaPoana 2.0
         </h5>
 
         <p>

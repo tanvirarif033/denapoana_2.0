@@ -8,13 +8,18 @@ import {
   AuthProvider
 } from "./context/AuthContext.jsx";
 
-import "bootstrap/dist/css/bootstrap.min.css";
-
-import "./styles/global.css";
+import {
+  CartProvider
+} from "./context/CartContext.jsx";
 
 import {
   Toaster
 } from "react-hot-toast";
+
+import "bootstrap/dist/css/bootstrap.min.css";
+
+import "./styles/global.css";
+
 
 
 ReactDOM.createRoot(
@@ -25,9 +30,13 @@ ReactDOM.createRoot(
 
     <AuthProvider>
 
-      <Toaster position="top-right" />
+      <CartProvider>
 
-      <App />
+        <Toaster position="top-right" />
+
+        <App />
+
+      </CartProvider>
 
     </AuthProvider>
 
