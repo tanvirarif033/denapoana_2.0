@@ -6,7 +6,8 @@ import {
 import {
   FaShoppingCart,
   FaHeart,
-  FaUser
+  FaUser,
+  FaUserShield
 } from "react-icons/fa";
 
 import {
@@ -17,6 +18,9 @@ import {
   useCart
 } from "../../context/CartContext";
 
+import toast
+from "react-hot-toast";
+
 
 
 function Navbar() {
@@ -25,6 +29,7 @@ function Navbar() {
     user,
     logout
   } = useAuth();
+
 
   const {
 
@@ -35,8 +40,11 @@ function Navbar() {
 
   } = useCart();
 
+
   const navigate =
     useNavigate();
+
+
 
 
   // =========================
@@ -48,8 +56,14 @@ function Navbar() {
 
     resetCounts();
 
+    toast.success(
+      "Logout Successful"
+    );
+
     navigate("/login");
   };
+
+
 
 
   return (
@@ -67,6 +81,7 @@ function Navbar() {
 
       <div className="container">
 
+
         {/* LOGO */}
         <Link
           className="
@@ -81,6 +96,8 @@ function Navbar() {
         </Link>
 
 
+
+
         {/* RIGHT SIDE */}
         <div
           className="
@@ -89,6 +106,31 @@ function Navbar() {
           gap-4
           "
         >
+
+
+          {/* ADMIN */}
+          {
+            user?.role ===
+            "ADMIN" && (
+
+              <Link
+                className="
+                btn btn-warning
+                fw-bold
+                "
+                to="/admin"
+              >
+
+                <FaUserShield />
+                {" "}
+                Admin
+
+              </Link>
+            )
+          }
+
+
+
 
           {/* WISHLIST */}
           <Link
@@ -121,6 +163,8 @@ function Navbar() {
             }
 
           </Link>
+
+
 
 
           {/* CART */}
@@ -157,21 +201,29 @@ function Navbar() {
           </Link>
 
 
-          {/* USER */}
+
+
+          {/* PROFILE */}
           {
             user ? (
 
               <>
+
+                {/* PROFILE ICON */}
                 <Link
                   className="
                   text-white
                   "
                   to="/profile"
                 >
+
                   <FaUser size={24} />
+
                 </Link>
 
 
+
+                {/* USER NAME */}
                 <span
                   className="
                   text-white
@@ -182,20 +234,27 @@ function Navbar() {
                 </span>
 
 
+
+                {/* LOGOUT */}
                 <button
                   className="
                   btn btn-warning
                   fw-bold
                   "
-                  onClick={handleLogout}
+                  onClick={
+                    handleLogout
+                  }
                 >
                   Logout
                 </button>
+
               </>
 
             ) : (
 
               <>
+
+                {/* LOGIN */}
                 <Link
                   className="
                   btn btn-outline-light
@@ -206,6 +265,8 @@ function Navbar() {
                 </Link>
 
 
+
+                {/* REGISTER */}
                 <Link
                   className="
                   btn btn-warning
@@ -215,6 +276,7 @@ function Navbar() {
                 >
                   Register
                 </Link>
+
               </>
             )
           }

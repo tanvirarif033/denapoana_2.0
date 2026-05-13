@@ -1,20 +1,26 @@
-const prisma = require("../config/prisma");
+const prisma =
+  require("../config/prisma");
 
 const cloudinary =
   require("../config/cloudinary");
 
 
 
+// ======================================
 // GET USER PROFILE
+// ======================================
+
 const getUserProfile =
   async (req, res) => {
 
     try {
 
-      const userId = req.user.id;
+      const userId =
+        req.user.id;
 
       const user =
         await prisma.user.findUnique({
+
           where: {
             id: userId
           },
@@ -32,7 +38,9 @@ const getUserProfile =
         });
 
       res.status(200).json({
+
         success: true,
+
         user
       });
 
@@ -41,21 +49,28 @@ const getUserProfile =
       console.log(error);
 
       res.status(500).json({
+
         success: false,
-        message: "Server Error"
+
+        message:
+          "Server Error"
       });
     }
   };
 
 
 
+// ======================================
 // UPDATE PROFILE
+// ======================================
+
 const updateProfile =
   async (req, res) => {
 
     try {
 
-      const userId = req.user.id;
+      const userId =
+        req.user.id;
 
       const {
         name,
@@ -63,49 +78,17 @@ const updateProfile =
         address
       } = req.body;
 
-      let imageUrl;
-
-      // image upload
-      if (req.file) {
-
-        const base64 =
-          req.file.buffer.toString(
-            "base64"
-          );
-
-        const dataURI =
-          `data:${req.file.mimetype};base64,${base64}`;
-
-        const uploadedImage =
-          await cloudinary.uploader.upload(
-            dataURI,
-            {
-              folder:
-                "denpoana_profiles"
-            }
-          );
-
-        imageUrl =
-          uploadedImage.secure_url;
-      }
-
-      // update user
       const updatedUser =
         await prisma.user.update({
+
           where: {
             id: userId
           },
 
           data: {
-            ...(name && { name }),
-
-            ...(phone && { phone }),
-
-            ...(address && { address }),
-
-            ...(imageUrl && {
-              profileImage: imageUrl
-            })
+            name,
+            phone,
+            address
           },
 
           select: {
@@ -120,7 +103,9 @@ const updateProfile =
         });
 
       res.status(200).json({
+
         success: true,
+
         message:
           "Profile updated successfully",
 
@@ -132,23 +117,126 @@ const updateProfile =
       console.log(error);
 
       res.status(500).json({
+
         success: false,
-        message: "Server Error"
+
+        message:
+          "Server Error"
       });
     }
   };
 
 
 
+// ======================================
+// UPLOAD PROFILE IMAGE
+// ======================================
+
+const uploadProfileImage =
+  async (req, res) => {
+
+    try {
+
+      const userId =
+        req.user.id;
+
+      // VALIDATION
+      if (!req.file) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          message:
+            "Please select an image"
+        });
+      }
+
+      // CONVERT BUFFER
+      const base64 =
+        req.file.buffer.toString(
+          "base64"
+        );
+
+      const dataURI =
+        `data:${req.file.mimetype};base64,${base64}`;
+
+      // CLOUDINARY
+      const uploadedImage =
+        await cloudinary.uploader.upload(
+
+          dataURI,
+
+          {
+            folder:
+              "denapoana_profiles"
+          }
+        );
+
+      // UPDATE USER
+      const updatedUser =
+        await prisma.user.update({
+
+          where: {
+            id: userId
+          },
+
+          data: {
+            profileImage:
+              uploadedImage.secure_url
+          },
+
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            role: true,
+            address: true,
+            profileImage: true
+          }
+        });
+
+      res.status(200).json({
+
+        success: true,
+
+        message:
+          "Profile image uploaded successfully",
+
+        updatedUser
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+
+        success: false,
+
+        message:
+          "Image upload failed"
+      });
+    }
+  };
+
+
+
+// ======================================
 // DELETE PROFILE IMAGE
+// ======================================
+
 const deleteProfileImage =
   async (req, res) => {
 
     try {
 
-      const userId = req.user.id;
+      const userId =
+        req.user.id;
 
       await prisma.user.update({
+
         where: {
           id: userId
         },
@@ -159,7 +247,9 @@ const deleteProfileImage =
       });
 
       res.status(200).json({
+
         success: true,
+
         message:
           "Profile image removed"
       });
@@ -169,15 +259,87 @@ const deleteProfileImage =
       console.log(error);
 
       res.status(500).json({
+
         success: false,
-        message: "Server Error"
+
+        message:
+          "Server Error"
       });
     }
   };
 
 
 
+// ======================================
+// GET USER ORDERS
+// ======================================
+
+const getUserOrders =
+  async (req, res) => {
+
+    try {
+
+      const userId =
+        req.user.id;
+
+      const orders =
+        await prisma.order.findMany({
+
+          where: {
+            userId
+          },
+
+          include: {
+
+            orderItems: {
+
+              include: {
+
+                product: {
+
+                  select: {
+                    id: true,
+                    title: true,
+                    images: true,
+                    price: true
+                  }
+                }
+              }
+            }
+          },
+
+          orderBy: {
+            createdAt: "desc"
+          }
+        });
+
+      res.status(200).json({
+
+        success: true,
+
+        orders
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+
+        success: false,
+
+        message:
+          "Failed to fetch orders"
+      });
+    }
+  };
+
+
+
+// ======================================
 // ADMIN GET ALL USERS
+// ======================================
+
 const getAllUsers =
   async (req, res) => {
 
@@ -185,6 +347,7 @@ const getAllUsers =
 
       const users =
         await prisma.user.findMany({
+
           select: {
             id: true,
             name: true,
@@ -201,8 +364,12 @@ const getAllUsers =
         });
 
       res.status(200).json({
+
         success: true,
-        totalUsers: users.length,
+
+        totalUsers:
+          users.length,
+
         users
       });
 
@@ -211,37 +378,52 @@ const getAllUsers =
       console.log(error);
 
       res.status(500).json({
+
         success: false,
-        message: "Server Error"
+
+        message:
+          "Server Error"
       });
     }
   };
 
 
 
+// ======================================
 // ADMIN CHANGE ROLE
+// ======================================
+
 const changeUserRole =
   async (req, res) => {
 
     try {
 
-      const { userId } = req.params;
+      const { userId } =
+        req.params;
 
-      const { role } = req.body;
+      const { role } =
+        req.body;
 
-      // validation
+      // VALIDATION
       if (
+
         role !== "USER" &&
+
         role !== "ADMIN"
       ) {
+
         return res.status(400).json({
+
           success: false,
-          message: "Invalid role"
+
+          message:
+            "Invalid role"
         });
       }
 
       const updatedUser =
         await prisma.user.update({
+
           where: {
             id: userId
           },
@@ -252,7 +434,9 @@ const changeUserRole =
         });
 
       res.status(200).json({
+
         success: true,
+
         message:
           "User role updated",
 
@@ -264,8 +448,11 @@ const changeUserRole =
       console.log(error);
 
       res.status(500).json({
+
         success: false,
-        message: "Server Error"
+
+        message:
+          "Server Error"
       });
     }
   };
@@ -273,9 +460,18 @@ const changeUserRole =
 
 
 module.exports = {
+
   getUserProfile,
+
   updateProfile,
+
+  uploadProfileImage,
+
   deleteProfileImage,
+
+  getUserOrders,
+
   getAllUsers,
+
   changeUserRole
 };

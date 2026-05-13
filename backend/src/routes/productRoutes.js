@@ -1,12 +1,9 @@
 const express = require("express");
 
-const {
-  createProduct,
-  getProducts,
-  getSingleProduct,
-  updateProduct,
-  deleteProduct
-} = require("../controllers/productController");
+const router = express.Router();
+
+const upload =
+  require("../middlewares/uploadMiddleware");
 
 const authMiddleware =
   require("../middlewares/authMiddleware");
@@ -14,41 +11,68 @@ const authMiddleware =
 const adminMiddleware =
   require("../middlewares/adminMiddleware");
 
-const upload =
-  require("../middlewares/uploadMiddleware");
+const {
 
-const router = express.Router();
+  createProduct,
+  getProducts,
+  getSingleProduct,
+  updateProduct,
+  deleteProduct
+
+} = require("../controllers/productController");
 
 
+
+// ===================================
 // CREATE PRODUCT
+// ===================================
+
 router.post(
   "/",
   authMiddleware,
   adminMiddleware,
-  upload.single("image"),
+  upload.array("images", 5),
   createProduct
 );
 
 
+// ===================================
 // GET ALL PRODUCTS
-router.get("/", getProducts);
+// ===================================
+
+router.get(
+  "/",
+  getProducts
+);
 
 
+// ===================================
 // GET SINGLE PRODUCT
-router.get("/:id", getSingleProduct);
+// ===================================
+
+router.get(
+  "/:id",
+  getSingleProduct
+);
 
 
+// ===================================
 // UPDATE PRODUCT
+// ===================================
+
 router.put(
   "/:id",
   authMiddleware,
   adminMiddleware,
-  upload.single("image"),
+  upload.array("images", 5),
   updateProduct
 );
 
 
+// ===================================
 // DELETE PRODUCT
+// ===================================
+
 router.delete(
   "/:id",
   authMiddleware,

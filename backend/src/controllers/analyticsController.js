@@ -146,17 +146,21 @@ const getTopSellingProducts =
 
         if (!productSalesMap[productId]) {
 
-          productSalesMap[productId] = {
-            productId,
+      productSalesMap[productId] = {
 
-            title:
-              item.product.title,
+  productId,
 
-            image:
-              item.product.images[0],
+  title:
+    item.product.title,
 
-            totalSold: 0
-          };
+  image:
+    item.product.images?.[0],
+
+  price:
+    item.product.price,
+
+  totalSold: 0
+};
         }
 
         productSalesMap[
