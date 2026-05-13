@@ -13,6 +13,10 @@ import {
   useAuth
 } from "../../context/AuthContext";
 
+import {
+  useCart
+} from "../../context/CartContext";
+
 
 
 function Navbar() {
@@ -22,14 +26,27 @@ function Navbar() {
     logout
   } = useAuth();
 
+  const {
+
+    cartCount,
+    wishlistCount,
+
+    resetCounts
+
+  } = useCart();
+
   const navigate =
     useNavigate();
 
 
-  // handle logout
+  // =========================
+  // LOGOUT
+  // =========================
   const handleLogout = () => {
 
     logout();
+
+    resetCounts();
 
     navigate("/login");
   };
@@ -56,11 +73,11 @@ function Navbar() {
           navbar-brand
           fw-bold
           text-warning
-          fs-4
+          fs-1
           "
           to="/"
         >
-          DenPoana 2.0
+          DenaPoana 2.0
         </Link>
 
 
@@ -69,7 +86,7 @@ function Navbar() {
           className="
           d-flex
           align-items-center
-          gap-3
+          gap-4
           "
         >
 
@@ -81,7 +98,28 @@ function Navbar() {
             "
             to="/wishlist"
           >
-            <FaHeart size={22} />
+
+            <FaHeart size={24} />
+
+            {
+              wishlistCount > 0 && (
+
+                <span
+                  className="
+                  position-absolute
+                  top-0
+                  start-100
+                  translate-middle
+                  badge
+                  rounded-pill
+                  bg-danger
+                  "
+                >
+                  {wishlistCount}
+                </span>
+              )
+            }
+
           </Link>
 
 
@@ -93,44 +131,61 @@ function Navbar() {
             "
             to="/cart"
           >
-            <FaShoppingCart size={22} />
+
+            <FaShoppingCart size={24} />
+
+            {
+              cartCount > 0 && (
+
+                <span
+                  className="
+                  position-absolute
+                  top-0
+                  start-100
+                  translate-middle
+                  badge
+                  rounded-pill
+                  bg-warning
+                  text-dark
+                  "
+                >
+                  {cartCount}
+                </span>
+              )
+            }
+
           </Link>
 
 
+          {/* USER */}
           {
             user ? (
 
               <>
-                {/* PROFILE */}
                 <Link
                   className="
                   text-white
                   "
                   to="/profile"
                 >
-                  <FaUser size={22} />
+                  <FaUser size={24} />
                 </Link>
 
 
-                {/* USER NAME */}
                 <span
                   className="
                   text-white
-                  fw-semibold
+                  fw-bold
                   "
                 >
                   {user.name}
                 </span>
 
 
-                {/* LOGOUT */}
                 <button
                   className="
-                  btn
-                  btn-warning
-                  btn-sm
-                  fw-semibold
-                  px-3
+                  btn btn-warning
+                  fw-bold
                   "
                   onClick={handleLogout}
                 >
@@ -141,14 +196,9 @@ function Navbar() {
             ) : (
 
               <>
-                {/* LOGIN */}
                 <Link
                   className="
-                  btn
-                  btn-outline-light
-                  btn-sm
-                  px-3
-                  fw-semibold
+                  btn btn-outline-light
                   "
                   to="/login"
                 >
@@ -156,14 +206,10 @@ function Navbar() {
                 </Link>
 
 
-                {/* REGISTER */}
                 <Link
                   className="
-                  btn
-                  btn-warning
-                  btn-sm
-                  px-3
-                  fw-semibold
+                  btn btn-warning
+                  fw-bold
                   "
                   to="/register"
                 >

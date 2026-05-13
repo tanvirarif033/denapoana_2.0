@@ -7,13 +7,19 @@ import {
   useNavigate
 } from "react-router-dom";
 
-import toast from "react-hot-toast";
+import toast
+from "react-hot-toast";
 
-import api from "../../api/axios";
+import api
+from "../../api/axios";
 
 import {
   useAuth
 } from "../../context/AuthContext";
+
+import {
+  useCart
+} from "../../context/CartContext";
 
 import Navbar
 from "../../components/layout/Navbar";
@@ -28,6 +34,12 @@ function LoginPage() {
   const { login } =
     useAuth();
 
+  const {
+    fetchCartCount,
+    fetchWishlistCount
+  } = useCart();
+
+
   const [formData, setFormData] =
     useState({
 
@@ -35,23 +47,30 @@ function LoginPage() {
       password: ""
     });
 
+
   const [loading, setLoading] =
     useState(false);
 
 
-  // input change
-  const handleChange = (e) => {
+  // =========================
+  // INPUT CHANGE
+  // =========================
+  const handleChange =
+    (e) => {
 
-    setFormData({
-      ...formData,
+      setFormData({
 
-      [e.target.name]:
-        e.target.value
-    });
-  };
+        ...formData,
+
+        [e.target.name]:
+          e.target.value
+      });
+    };
 
 
-  // submit
+  // =========================
+  // SUBMIT
+  // =========================
   const handleSubmit =
     async (e) => {
 
@@ -67,13 +86,26 @@ function LoginPage() {
             formData
           );
 
-        // success
-        if (response.data.success) {
 
+        // SUCCESS
+        if (
+          response.data.success
+        ) {
+
+          // LOGIN SAVE
           login(
+
             response.data.token,
+
             response.data.user
           );
+
+
+          // REALTIME NAVBAR COUNT
+          await fetchCartCount();
+
+          await fetchWishlistCount();
+
 
           toast.success(
             "Login Successful"
@@ -85,7 +117,9 @@ function LoginPage() {
       } catch (error) {
 
         toast.error(
+
           error.response?.data?.message ||
+
           "Login Failed"
         );
 
@@ -127,6 +161,7 @@ function LoginPage() {
           }}
         >
 
+          {/* TITLE */}
           <h2
             className="
             text-center
@@ -137,10 +172,15 @@ function LoginPage() {
             Login
           </h2>
 
+
+          {/* FORM */}
           <form
-            onSubmit={handleSubmit}
+            onSubmit={
+              handleSubmit
+            }
           >
 
+            {/* EMAIL */}
             <div className="mb-3">
 
               <label
@@ -155,13 +195,20 @@ function LoginPage() {
               <input
                 type="email"
 
-                className="form-control"
+                className="
+                form-control
+                py-2
+                "
 
                 name="email"
 
-                value={formData.email}
+                value={
+                  formData.email
+                }
 
-                onChange={handleChange}
+                onChange={
+                  handleChange
+                }
 
                 required
               />
@@ -169,7 +216,8 @@ function LoginPage() {
             </div>
 
 
-            <div className="mb-3">
+            {/* PASSWORD */}
+            <div className="mb-4">
 
               <label
                 className="
@@ -183,13 +231,20 @@ function LoginPage() {
               <input
                 type="password"
 
-                className="form-control"
+                className="
+                form-control
+                py-2
+                "
 
                 name="password"
 
-                value={formData.password}
+                value={
+                  formData.password
+                }
 
-                onChange={handleChange}
+                onChange={
+                  handleChange
+                }
 
                 required
               />
@@ -197,19 +252,25 @@ function LoginPage() {
             </div>
 
 
+            {/* BUTTON */}
             <button
               type="submit"
+
+              disabled={loading}
 
               className="
               btn btn-warning
               w-100
               fw-bold
+              py-2
               "
             >
 
               {
                 loading
+
                   ? "Loading..."
+
                   : "Login"
               }
 
@@ -218,10 +279,11 @@ function LoginPage() {
           </form>
 
 
+          {/* REGISTER */}
           <p
             className="
             text-center
-            mt-3
+            mt-4
             "
           >
 
@@ -229,9 +291,11 @@ function LoginPage() {
 
             <Link
               to="/register"
+
               className="
               ms-2
               fw-bold
+              text-decoration-none
               "
             >
               Register

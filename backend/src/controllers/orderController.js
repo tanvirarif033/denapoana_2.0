@@ -5,7 +5,9 @@ const stripe =
 
 
 
+// ======================================
 // PLACE ORDER
+// ======================================
 const placeOrder = async (req, res) => {
 
   try {
@@ -17,18 +19,31 @@ const placeOrder = async (req, res) => {
       paymentMethod
     } = req.body;
 
-    // validation
-    if (!address || !paymentMethod) {
+
+    // =========================
+    // VALIDATION
+    // =========================
+    if (
+      !address ||
+      !paymentMethod
+    ) {
+
       return res.status(400).json({
+
         success: false,
+
         message:
           "Address & payment method required"
       });
     }
 
-    // get cart items
+
+    // =========================
+    // GET CART ITEMS
+    // =========================
     const cartItems =
       await prisma.cart.findMany({
+
         where: {
           userId
         },
@@ -38,37 +53,84 @@ const placeOrder = async (req, res) => {
         }
       });
 
-    // check cart
-    if (cartItems.length === 0) {
+
+    // =========================
+    // EMPTY CART CHECK
+    // =========================
+    if (
+      cartItems.length === 0
+    ) {
+
       return res.status(400).json({
+
         success: false,
-        message: "Cart is empty"
+
+        message:
+          "Cart is empty"
       });
     }
 
-    // total price
-    let totalPrice = 0;
+
+    // =========================
+    // SUBTOTAL
+    // =========================
+    let subtotal = 0;
 
     cartItems.forEach((item) => {
 
-      totalPrice +=
+      subtotal +=
         item.product.price *
         item.quantity;
     });
 
-    // stripe payment
-    if (paymentMethod === "STRIPE") {
+
+    // =========================
+    // DELIVERY CHARGE
+    // =========================
+    const city =
+      address.toLowerCase();
+
+
+    const deliveryCharge =
+
+      city.includes("dhaka")
+        ? 70
+        : 120;
+
+
+    // =========================
+    // TOTAL PRICE
+    // =========================
+    const totalPrice =
+      subtotal +
+      deliveryCharge;
+
+
+
+    // =====================================
+    // STRIPE PAYMENT
+    // =====================================
+    if (
+      paymentMethod ===
+      "STRIPE"
+    ) {
 
       const session =
         await stripe.checkout.sessions.create({
-          payment_method_types: ["card"],
+
+          payment_method_types: [
+            "card"
+          ],
 
           line_items:
             cartItems.map((item) => ({
+
               price_data: {
+
                 currency: "bdt",
 
                 product_data: {
+
                   name:
                     item.product.title
                 },
@@ -92,15 +154,76 @@ const placeOrder = async (req, res) => {
             "http://localhost:5173/payment-cancel"
         });
 
+
+      // =========================
+      // SAVE ORDER
+      // =========================
+      const order =
+        await prisma.order.create({
+
+          data: {
+
+            totalPrice,
+
+            paymentMethod,
+
+            paymentStatus: true,
+
+            address,
+
+            userId,
+
+            orderStatus:
+              "PROCESSING",
+
+            orderItems: {
+
+              create:
+                cartItems.map((item) => ({
+
+                  productId:
+                    item.product.id,
+
+                  quantity:
+                    item.quantity,
+
+                  price:
+                    item.product.price
+                }))
+            }
+          }
+        });
+
+
+      // =========================
+      // CLEAR CART
+      // =========================
+      await prisma.cart.deleteMany({
+
+        where: {
+          userId
+        }
+      });
+
+
       return res.status(200).json({
+
         success: true,
-        url: session.url
+
+        url: session.url,
+
+        order
       });
     }
 
+
+
+    // =====================================
     // COD / BKASH / NAGAD
+    // =====================================
     const order =
       await prisma.order.create({
+
         data: {
 
           totalPrice,
@@ -116,9 +239,14 @@ const placeOrder = async (req, res) => {
 
           userId,
 
+          orderStatus:
+            "PROCESSING",
+
           orderItems: {
+
             create:
               cartItems.map((item) => ({
+
                 productId:
                   item.product.id,
 
@@ -132,20 +260,33 @@ const placeOrder = async (req, res) => {
         },
 
         include: {
+
           orderItems: true
         }
       });
 
-    // clear cart
+
+    // =========================
+    // CLEAR CART
+    // =========================
     await prisma.cart.deleteMany({
+
       where: {
         userId
       }
     });
 
+
+    // =========================
+    // RESPONSE
+    // =========================
     res.status(201).json({
+
       success: true,
-      message: "Order placed successfully",
+
+      message:
+        "Order placed successfully",
+
       order
     });
 
@@ -154,30 +295,39 @@ const placeOrder = async (req, res) => {
     console.log(error);
 
     res.status(500).json({
+
       success: false,
-      message: "Server Error"
+
+      message:
+        "Server Error"
     });
   }
 };
 
 
 
+// ======================================
 // USER ORDER HISTORY
+// ======================================
 const getUserOrders =
   async (req, res) => {
 
     try {
 
-      const userId = req.user.id;
+      const userId =
+        req.user.id;
 
       const orders =
         await prisma.order.findMany({
+
           where: {
             userId
           },
 
           include: {
+
             orderItems: {
+
               include: {
                 product: true
               }
@@ -189,9 +339,14 @@ const getUserOrders =
           }
         });
 
+
       res.status(200).json({
+
         success: true,
-        totalOrders: orders.length,
+
+        totalOrders:
+          orders.length,
+
         orders
       });
 
@@ -200,15 +355,20 @@ const getUserOrders =
       console.log(error);
 
       res.status(500).json({
+
         success: false,
-        message: "Server Error"
+
+        message:
+          "Server Error"
       });
     }
   };
 
 
 
+// ======================================
 // ADMIN ALL ORDERS
+// ======================================
 const getAllOrders =
   async (req, res) => {
 
@@ -220,6 +380,7 @@ const getAllOrders =
           include: {
 
             user: {
+
               select: {
                 name: true,
                 email: true
@@ -227,6 +388,7 @@ const getAllOrders =
             },
 
             orderItems: {
+
               include: {
                 product: true
               }
@@ -238,9 +400,14 @@ const getAllOrders =
           }
         });
 
+
       res.status(200).json({
+
         success: true,
-        totalOrders: orders.length,
+
+        totalOrders:
+          orders.length,
+
         orders
       });
 
@@ -249,37 +416,52 @@ const getAllOrders =
       console.log(error);
 
       res.status(500).json({
+
         success: false,
-        message: "Server Error"
+
+        message:
+          "Server Error"
       });
     }
   };
 
 
 
+// ======================================
 // UPDATE ORDER STATUS
+// ======================================
 const updateOrderStatus =
   async (req, res) => {
 
     try {
 
-      const { orderId } = req.params;
+      const {
+        orderId
+      } = req.params;
 
-      const { status } = req.body;
+      const {
+        status
+      } = req.body;
+
 
       const updatedOrder =
         await prisma.order.update({
+
           where: {
             id: orderId
           },
 
           data: {
-            orderStatus: status
+            orderStatus:
+              status
           }
         });
 
+
       res.status(200).json({
+
         success: true,
+
         message:
           "Order status updated",
 
@@ -291,8 +473,11 @@ const updateOrderStatus =
       console.log(error);
 
       res.status(500).json({
+
         success: false,
-        message: "Server Error"
+
+        message:
+          "Server Error"
       });
     }
   };
