@@ -1,8 +1,17 @@
 import {
-  BrowserRouter,
-  Routes,
-  Route
-} from "react-router-dom";
+BrowserRouter,
+Routes,
+Route
+}
+from "react-router-dom";
+
+
+// ===========================
+// AI
+// ===========================
+
+import AIChatbot
+from "./components/ai/AIChatbot";
 
 
 // ===========================
@@ -53,7 +62,6 @@ from "./pages/user/ProfilePage";
 
 
 
-
 // ===========================
 // ADMIN PAGES
 // ===========================
@@ -94,20 +102,21 @@ from "./routes/AdminRoute";
 
 
 
-
 function App() {
 
 return(
 
 <BrowserRouter>
 
+
+{/* GLOBAL AI BOT */}
+
+<AIChatbot/>
+
+
+
 <Routes>
 
-
-
-{/* ======================
-HOME
-====================== */}
 
 <Route
 path="/"
@@ -118,13 +127,6 @@ element={
 
 
 
-
-
-
-{/* ======================
-LOGIN
-====================== */}
-
 <Route
 path="/login"
 element={
@@ -134,14 +136,6 @@ element={
 
 
 
-
-
-
-
-{/* ======================
-REGISTER
-====================== */}
-
 <Route
 path="/register"
 element={
@@ -150,15 +144,6 @@ element={
 />
 
 
-
-
-
-
-
-
-{/* ======================
-PRODUCT DETAILS
-====================== */}
 
 <Route
 path="/product/:id"
@@ -170,14 +155,6 @@ element={
 
 
 
-
-
-
-
-
-{/* ======================
-CART
-====================== */}
 
 <Route
 
@@ -198,15 +175,6 @@ element={
 
 
 
-
-
-
-
-
-
-{/* ======================
-WISHLIST
-====================== */}
 
 <Route
 
@@ -229,13 +197,6 @@ element={
 
 
 
-
-
-
-{/* ======================
-CHECKOUT
-====================== */}
-
 <Route
 
 path="/checkout"
@@ -256,14 +217,6 @@ element={
 
 
 
-
-
-
-
-
-{/* ======================
-PAYMENT SUCCESS
-====================== */}
 
 <Route
 
@@ -287,13 +240,6 @@ element={
 
 
 
-
-
-
-{/* ======================
-USER DASHBOARD
-====================== */}
-
 <Route
 
 path="/dashboard"
@@ -315,14 +261,6 @@ element={
 
 
 
-
-
-
-
-
-{/* ======================
-PROFILE
-====================== */}
 
 <Route
 
@@ -346,12 +284,6 @@ element={
 
 
 
-
-
-{/* ======================
-ADMIN DASHBOARD
-====================== */}
-
 <Route
 
 path="/admin"
@@ -373,13 +305,6 @@ element={
 
 
 
-
-
-
-
-{/* ======================
-ADD PRODUCT
-====================== */}
 
 <Route
 
@@ -403,14 +328,6 @@ element={
 
 
 
-
-
-
-
-{/* ======================
-MANAGE PRODUCTS
-====================== */}
-
 <Route
 
 path="/admin/manage-products"
@@ -431,13 +348,6 @@ element={
 
 
 
-
-
-
-
-{/* ======================
-EDIT PRODUCT
-====================== */}
 
 <Route
 
@@ -461,13 +371,6 @@ element={
 
 
 
-
-
-
-{/* ======================
-MANAGE USERS
-====================== */}
-
 <Route
 
 path="/admin/manage-users"
@@ -490,14 +393,6 @@ element={
 
 
 
-
-
-
-
-{/* ======================
-MANAGE ORDERS
-====================== */}
-
 <Route
 
 path="/admin/manage-orders"
@@ -519,15 +414,6 @@ element={
 
 
 
-
-
-
-
-
-{/* ======================
-CREATE CATEGORY
-====================== */}
-
 <Route
 
 path="/admin/category"
@@ -548,13 +434,6 @@ element={
 
 
 
-
-
-
-
-{/* ======================
-404 PAGE
-====================== */}
 
 <Route
 
@@ -581,7 +460,6 @@ fw-bold
 }
 
 />
-
 
 
 </Routes>
