@@ -115,16 +115,6 @@ function ProductDetailsPage() {
         />
 
 
-        {/* AI BUTTON */}
-        <AIRecommendationButton
-          product={product}
-        />
-
-
-        {/* REVIEWS */}
-        <ReviewSection
-          reviews={product.reviews}
-        />
 
 
         {/* SIMILAR PRODUCTS */}

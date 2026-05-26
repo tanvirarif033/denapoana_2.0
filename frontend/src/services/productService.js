@@ -1,32 +1,45 @@
 import api from "../api/axios";
 
 
-
 // =====================================
 // GET ALL PRODUCTS
 // =====================================
 
-export const getProducts =
-  async (
-    page = 1,
-    search = "",
-    category = "",
-    sort = ""
-  ) => {
+export const getProducts=
+async(
 
-    const response =
-      await api.get("/products", {
+page=1,
+search="",
+category="",
+sort=""
 
-        params: {
-          page,
-          search,
-          category,
-          sort
-        }
-      });
+)=>{
 
-    return response.data;
-  };
+const response=
+
+await api.get(
+
+"/products",
+
+{
+
+params:{
+
+page,
+search,
+category,
+sort
+
+}
+
+}
+
+);
+
+return response.data;
+
+};
+
 
 
 
@@ -34,16 +47,21 @@ export const getProducts =
 // GET SINGLE PRODUCT
 // =====================================
 
-export const getSingleProduct =
-  async (id) => {
+export const getSingleProduct=
+async(id)=>{
 
-    const response =
-      await api.get(
-        `/products/${id}`
-      );
+const response=
 
-    return response.data;
-  };
+await api.get(
+
+`/products/${id}`
+
+);
+
+return response.data;
+
+};
+
 
 
 
@@ -51,16 +69,44 @@ export const getSingleProduct =
 // GET SIMILAR PRODUCTS
 // =====================================
 
-export const getSimilarProducts =
-  async (id) => {
+export const getSimilarProducts=
+async(productId)=>{
 
-    const response =
-      await api.get(
-        `/products/similar/${id}`
-      );
+const response=
 
-    return response.data;
-  };
+await api.get(
+
+`/products/similar/${productId}`
+
+);
+
+return response.data;
+
+};
+
+
+
+
+// =====================================
+// GET TOP RATED PRODUCTS
+// =====================================
+
+export const getTopProducts=
+async()=>{
+
+const response=
+
+await api.get(
+
+"/reviews/top-products"
+
+);
+
+return response.data;
+
+};
+
+
 
 
 
@@ -68,20 +114,92 @@ export const getSimilarProducts =
 // ADD REVIEW
 // =====================================
 
-export const addReview =
-  async (
-    productId,
-    reviewData
-  ) => {
+export const addReview=
+async(
 
-    const response =
-      await api.post(
-        `/reviews/${productId}`,
-        reviewData
-      );
+productId,
+reviewData
 
-    return response.data;
-  };
+)=>{
+
+const response=
+
+await api.post(
+
+"/reviews",
+
+{
+
+productId,
+
+...reviewData
+
+}
+
+);
+
+return response.data;
+
+};
+
+
+
+
+// =====================================
+// GET REVIEWS
+// =====================================
+
+export const getReviews=
+async(productId)=>{
+
+const response=
+
+await api.get(
+
+`/reviews/${productId}`
+
+);
+
+return response.data;
+
+};
+
+
+
+
+// =====================================
+// ADMIN REPLY REVIEW
+// =====================================
+
+export const replyReview=
+async(
+
+reviewId,
+reply
+
+)=>{
+
+const response=
+
+await api.put(
+
+`/reviews/reply/${reviewId}`,
+
+{
+
+reply
+
+}
+
+);
+
+return response.data;
+
+};
+
+
+
+
 
 
 
@@ -89,72 +207,27 @@ export const addReview =
 // ADD TO CART
 // =====================================
 
-export const addToCart =
-  async (productId) => {
+export const addToCart=
+async(productId)=>{
 
-    const response =
-      await api.post(
-        "/cart",
-        {
-          productId
-        }
-      );
+const response=
 
-    // IMPORTANT
-    return response.data;
-  };
+await api.post(
 
+"/cart",
 
+{
 
-// =====================================
-// ADD TO WISHLIST
-// =====================================
+productId
 
-export const addToWishlist =
-  async (productId) => {
+}
 
-    const response =
-      await api.post(
-        "/wishlist",
-        {
-          productId
-        }
-      );
+);
 
-    return response.data;
-  };
+return response.data;
 
+};
 
-
-// =====================================
-// REMOVE WISHLIST
-// =====================================
-
-export const removeWishlist =
-  async (wishlistId) => {
-
-    const response =
-      await api.delete(
-        `/wishlist/${wishlistId}`
-      );
-
-    return response.data;
-  };
-
-
-
-// =====================================
-// GET WISHLIST
-// =====================================
-
-export const getWishlist =
-  async () => {
-
-    const response =
-      await api.get("/wishlist");
-
-    return response.data;
-  };
 
 
 
@@ -162,14 +235,21 @@ export const getWishlist =
 // GET CART
 // =====================================
 
-export const getCart =
-  async () => {
+export const getCart=
+async()=>{
 
-    const response =
-      await api.get("/cart");
+const response=
 
-    return response.data;
-  };
+await api.get(
+
+"/cart"
+
+);
+
+return response.data;
+
+};
+
 
 
 
@@ -177,47 +257,163 @@ export const getCart =
 // REMOVE CART ITEM
 // =====================================
 
-export const removeCartItem =
-  async (cartId) => {
+export const removeCartItem=
+async(cartId)=>{
 
-    const response =
-      await api.delete(
-        `/cart/${cartId}`
-      );
+const response=
 
-    return response.data;
-  };
+await api.delete(
 
+`/cart/${cartId}`
 
+);
 
-// =====================================
-// INCREASE CART QUANTITY
-// =====================================
+return response.data;
 
-export const increaseQuantity =
-  async (cartId) => {
+};
 
-    const response =
-      await api.put(
-        `/cart/increase/${cartId}`
-      );
-
-    return response.data;
-  };
 
 
 
 // =====================================
-// DECREASE CART QUANTITY
+// INCREASE QUANTITY
 // =====================================
 
-export const decreaseQuantity =
-  async (cartId) => {
+export const increaseQuantity=
+async(cartId)=>{
 
-    const response =
-      await api.put(
-        `/cart/decrease/${cartId}`
-      );
+const response=
 
-    return response.data;
-  };
+await api.put(
+
+`/cart/increase/${cartId}`
+
+);
+
+return response.data;
+
+};
+
+
+
+
+// =====================================
+// DECREASE QUANTITY
+// =====================================
+
+export const decreaseQuantity=
+async(cartId)=>{
+
+const response=
+
+await api.put(
+
+`/cart/decrease/${cartId}`
+
+);
+
+return response.data;
+
+};
+
+
+
+
+
+
+// =====================================
+// ADD WISHLIST
+// =====================================
+
+export const addToWishlist=
+async(productId)=>{
+
+const response=
+
+await api.post(
+
+"/wishlist",
+
+{
+
+productId
+
+}
+
+);
+
+return response.data;
+
+};
+
+
+
+
+// =====================================
+// GET WISHLIST
+// =====================================
+
+export const getWishlist=
+async()=>{
+
+const response=
+
+await api.get(
+
+"/wishlist"
+
+);
+
+return response.data;
+
+};
+
+
+
+
+// =====================================
+// REMOVE WISHLIST
+// =====================================
+
+export const removeWishlist=
+async(wishlistId)=>{
+
+const response=
+
+await api.delete(
+
+`/wishlist/${wishlistId}`
+
+);
+
+return response.data;
+
+};
+
+
+
+
+// =====================================
+// AI PRODUCT RECOMMEND
+// =====================================
+
+export const getAIRecommendation=
+async(message)=>{
+
+const response=
+
+await api.post(
+
+"/ai/chat",
+
+{
+
+message
+
+}
+
+);
+
+return response.data;
+
+};

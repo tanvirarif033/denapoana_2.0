@@ -1,6 +1,7 @@
-import {
-  useNavigate
-} from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import toast from "react-hot-toast";
 
 import {
   FaHeart,
@@ -8,22 +9,19 @@ import {
   FaStar
 } from "react-icons/fa";
 
-import toast
-from "react-hot-toast";
-
 import {
   addToCart,
   addToWishlist
 } from "../../services/productService";
 
-import {
-  useAuth
-} from "../../context/AuthContext";
+import { useAuth }
+from "../../context/AuthContext";
 
-import {
-  useCart
-} from "../../context/CartContext";
+import { useCart }
+from "../../context/CartContext";
 
+import ReviewSection
+from "./ReviewSection";
 
 
 function ProductDetails({
@@ -42,21 +40,74 @@ function ProductDetails({
   } = useCart();
 
 
-  // =========================
-  // ADD TO CART
-  // =========================
+
+  if (!product) {
+
+    return (
+
+      <div
+        className="
+        container
+        py-5
+        text-center
+        "
+      >
+
+        <div
+          className="
+          spinner-border
+          text-warning
+          "
+        />
+
+        <p className="mt-3">
+
+          Loading Product...
+
+        </p>
+
+      </div>
+
+    )
+
+  }
+
+
+
+  const [
+    selectedImage,
+
+    setSelectedImage
+
+  ] = useState(
+
+    product.images?.[0]
+
+    ||
+
+    "https://placehold.co/600"
+
+  );
+
+
+
+  // ADD CART
+
   const handleAddCart =
     async () => {
 
-      // LOGIN CHECK
       if (!user) {
 
         toast.error(
-          "You have to login first"
+          "Login first"
         );
 
-        return navigate("/login");
+        navigate("/login");
+
+        return;
+
       }
+
 
       try {
 
@@ -64,53 +115,45 @@ function ProductDetails({
           product.id
         );
 
+
         await fetchCartCount();
+
 
         toast.success(
           "Added To Cart"
         );
 
-      } catch (error) {
-
-        if (
-
-          error.response?.data?.message
-            ?.toLowerCase()
-            .includes("already")
-
-        ) {
-
-          toast(
-            "Product already added in cart"
-          );
-
-        } else {
-
-          toast.error(
-            error.response?.data?.message ||
-
-            "Cart Failed"
-          );
-        }
       }
+
+      catch {
+
+        toast.error(
+          "Cart Failed"
+        );
+
+      }
+
     };
 
 
-  // =========================
+
   // WISHLIST
-  // =========================
+
   const handleWishlist =
     async () => {
 
-      // LOGIN CHECK
       if (!user) {
 
         toast.error(
-          "You have to login first"
+          "Login first"
         );
 
-        return navigate("/login");
+        navigate("/login");
+
+        return;
+
       }
+
 
       try {
 
@@ -124,156 +167,287 @@ function ProductDetails({
           "Added To Wishlist"
         );
 
-      } catch (error) {
-
-        if (
-
-          error.response?.data?.message
-            ?.toLowerCase()
-            .includes("already")
-
-        ) {
-
-          toast(
-            "This product is already in wishlist"
-          );
-
-        } else {
-
-          toast.error(
-            error.response?.data?.message ||
-
-            "Wishlist Failed"
-          );
-        }
       }
+
+      catch {
+
+        toast.error(
+          "Wishlist Failed"
+        );
+
+      }
+
     };
+
 
 
   return (
 
-    <div className="row g-5">
+    <>
 
-      {/* IMAGE */}
-      <div className="col-lg-6">
+      <div
+        className="
+        row
+        g-5
+        "
+      >
 
-        <img
-          src={
-            product.images?.[0]
+
+
+        {/* IMAGE */}
+
+        <div
+          className="
+          col-lg-6
+          "
+        >
+
+          <img
+
+            src={selectedImage}
+
+            alt=""
+
+            className="
+            img-fluid
+            rounded
+            shadow
+            w-100
+            "
+
+            style={{
+
+              height:
+                "500px",
+
+              objectFit:
+                "cover"
+
+            }}
+
+          />
+
+
+
+          <div
+            className="
+            d-flex
+            gap-2
+            mt-3
+            flex-wrap
+            "
+          >
+
+            {
+
+              product.images?.map(
+
+                (img, index) => (
+
+                  <img
+
+                    key={index}
+
+                    src={img}
+
+                    alt=""
+
+                    onClick={() =>
+
+                      setSelectedImage(
+                        img
+                      )
+
+                    }
+
+                    style={{
+
+                      width: "70px",
+
+                      height: "70px",
+
+                      cursor:
+                        "pointer",
+
+                      border:
+
+                        selectedImage === img
+
+                          ?
+
+                          "2px solid orange"
+
+                          :
+
+                          "1px solid #ddd",
+
+
+                      borderRadius:
+                        "10px",
+
+                      objectFit:
+                        "cover"
+
+                    }}
+
+                  />
+
+                )
+
+              )
+
+            }
+
+          </div>
+
+        </div>
+
+
+
+
+
+        {/* DETAILS */}
+
+        <div
+          className="
+          col-lg-6
+          "
+        >
+
+          <h2
+            className="
+            fw-bold
+            mb-3
+            "
+          >
+
+            {product.title}
+
+          </h2>
+
+
+
+          <div
+            className="
+            d-flex
+            align-items-center
+            gap-2
+            "
+          >
+
+            <FaStar
+              color="orange"
+            />
+
+            {
+
+              product.rating
+
+              ||
+
+              0
+
+            }
+
+          </div>
+
+
+
+          <h2
+            className="
+            text-warning
+            my-4
+            "
+          >
+
+            Tk {product.price}
+
+          </h2>
+
+
+
+          <p>
+
+            {product.description}
+
+          </p>
+
+
+
+          <div
+            className="
+            d-flex
+            gap-3
+            mt-4
+            "
+          >
+
+            <button
+
+              className="
+              btn
+              btn-warning
+              "
+
+              onClick={
+                handleAddCart
+              }
+
+            >
+
+              <FaShoppingCart />
+
+              Add To Cart
+
+            </button>
+
+
+
+            <button
+
+              className="
+              btn
+              btn-outline-danger
+              "
+
+              onClick={
+                handleWishlist
+              }
+
+            >
+
+              <FaHeart />
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <div
+        className="
+        mt-5
+        "
+      >
+
+        <ReviewSection
+
+          productId={
+            product.id
           }
 
-          alt={product.title}
-
-          className="
-          img-fluid
-          rounded
-          shadow-sm
-          "
         />
 
       </div>
 
+    </>
 
-      {/* DETAILS */}
-      <div className="col-lg-6">
+  )
 
-        <h2
-          className="
-          fw-bold
-          mb-3
-          "
-        >
-          {product.title}
-        </h2>
-
-
-        {/* RATING */}
-        <div
-          className="
-          d-flex
-          align-items-center
-          gap-2
-          mb-3
-          "
-        >
-
-          <FaStar color="orange" />
-
-          <span>
-            {product.rating || 0}
-          </span>
-
-        </div>
-
-
-        {/* PRICE */}
-        <h3
-          className="
-          text-warning
-          fw-bold
-          mb-4
-          "
-        >
-          Tk {product.price}
-        </h3>
-
-
-        {/* DESCRIPTION */}
-        <p
-          className="
-          text-muted
-          fs-5
-          "
-        >
-          {product.description}
-        </p>
-
-
-        {/* BUTTONS */}
-        <div
-          className="
-          d-flex
-          gap-3
-          mt-4
-          "
-        >
-
-          {/* CART */}
-          <button
-            className="
-            btn btn-warning
-            px-4
-            "
-            onClick={handleAddCart}
-          >
-
-            <FaShoppingCart />
-
-            <span className="ms-2">
-              Add To Cart
-            </span>
-
-          </button>
-
-
-          {/* WISHLIST */}
-          <button
-            className="
-            btn btn-outline-danger
-            "
-            onClick={handleWishlist}
-          >
-
-            <FaHeart />
-
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-  );
 }
 
 export default ProductDetails;

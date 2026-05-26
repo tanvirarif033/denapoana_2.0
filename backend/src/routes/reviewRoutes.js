@@ -1,58 +1,116 @@
-const express = require("express");
+const express=
+require("express");
 
 const {
-  addReview,
-  getProductReviews,
-  replyReview,
-  getSimilarProducts,
-  getTopRatedProducts
-} = require("../controllers/reviewController");
 
-const authMiddleware =
-  require("../middlewares/authMiddleware");
+addReview,
+getProductReviews,
+replyReview,
+getSimilarProducts,
+getTopRatedProducts
 
-const adminMiddleware =
-  require("../middlewares/adminMiddleware");
+}=require(
+"../controllers/reviewController"
+);
 
-const router = express.Router();
+const authMiddleware=
+require(
+"../middlewares/authMiddleware"
+);
+
+const adminMiddleware=
+require(
+"../middlewares/adminMiddleware"
+);
+
+const router=
+express.Router();
 
 
+
+// ==========================
 // ADD REVIEW
+// Login required
+// ==========================
+
 router.post(
-  "/",
-  authMiddleware,
-  addReview
+
+"/",
+
+authMiddleware,
+
+addReview
+
 );
 
 
-// GET REVIEWS
-router.get(
-  "/:productId",
-  getProductReviews
-);
 
 
-// ADMIN REPLY
-router.put(
-  "/reply/:reviewId",
-  authMiddleware,
-  adminMiddleware,
-  replyReview
-);
-
-
+// ==========================
 // SIMILAR PRODUCTS
+// ==========================
+
 router.get(
-  "/similar/:productId",
-  getSimilarProducts
+
+"/similar/:productId",
+
+getSimilarProducts
+
 );
 
 
+
+
+// ==========================
 // TOP PRODUCTS
+// ==========================
+
 router.get(
-  "/top-products",
-  getTopRatedProducts
+
+"/top-products",
+
+getTopRatedProducts
+
 );
 
 
-module.exports = router;
+
+
+// ==========================
+// ADMIN REPLY REVIEW
+// ==========================
+
+router.put(
+
+"/reply/:reviewId",
+
+authMiddleware,
+
+adminMiddleware,
+
+replyReview
+
+);
+
+
+
+
+// ==========================
+// GET PRODUCT REVIEWS
+// IMPORTANT:
+// keep dynamic route last
+// ==========================
+
+router.get(
+
+"/:productId",
+
+getProductReviews
+
+);
+
+
+
+
+module.exports=
+router;

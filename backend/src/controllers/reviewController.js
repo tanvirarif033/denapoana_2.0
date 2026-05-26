@@ -1,305 +1,623 @@
-const prisma = require("../config/prisma");
+const prisma=
+require("../config/prisma");
 
 
+
+// ==========================
 // ADD REVIEW
-const addReview = async (req, res) => {
+// ==========================
 
-  try {
+const addReview=
+async(req,res)=>{
 
-    const userId = req.user.id;
+try{
 
-    const {
-      productId,
-      rating,
-      comment
-    } = req.body;
+const userId=
+req.user.id;
 
-    // validation
-    if (
-      !productId ||
-      !rating ||
-      !comment
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields required"
-      });
-    }
 
-    // check product
-    const product =
-      await prisma.product.findUnique({
-        where: {
-          id: productId
-        }
-      });
+const{
+productId,
+rating,
+comment
+}=req.body;
 
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found"
-      });
-    }
 
-    // check existing review
-    const existingReview =
-      await prisma.review.findFirst({
-        where: {
-          userId,
-          productId
-        }
-      });
 
-    if (existingReview) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "You already reviewed this product"
-      });
-    }
+// validation
 
-    // create review
-    await prisma.review.create({
-      data: {
-        rating: Number(rating),
-        comment,
-        userId,
-        productId
-      }
-    });
+if(
 
-    // calculate average rating
-    const reviews =
-      await prisma.review.findMany({
-        where: {
-          productId
-        }
-      });
+!productId ||
 
-    const totalRating =
-      reviews.reduce(
-        (sum, item) => sum + item.rating,
-        0
-      );
+!rating ||
 
-    const averageRating =
-      totalRating / reviews.length;
+!comment?.trim()
 
-    // update product rating
-    await prisma.product.update({
-      where: {
-        id: productId
-      },
+){
 
-      data: {
-        rating: averageRating
-      }
-    });
+return res.status(400)
 
-    res.status(201).json({
-      success: true,
-      message: "Review added successfully"
-    });
+.json({
 
-  } catch (error) {
+success:false,
 
-    console.log(error);
+message:
+"All fields required"
 
-    res.status(500).json({
-      success: false,
-      message: "Server Error"
-    });
-  }
+});
+
+}
+
+
+
+// product check
+
+const product=
+
+await prisma.product
+.findUnique({
+
+where:{
+
+id:productId
+
+}
+
+});
+
+
+if(!product){
+
+return res.status(404)
+
+.json({
+
+success:false,
+
+message:
+"Product not found"
+
+});
+
+}
+
+
+
+// one review per user
+
+const existingReview=
+
+await prisma.review
+.findFirst({
+
+where:{
+
+userId,
+productId
+
+}
+
+});
+
+
+
+if(existingReview){
+
+return res.status(400)
+
+.json({
+
+success:false,
+
+message:
+"You already reviewed this product"
+
+});
+
+}
+
+
+
+// create review
+
+await prisma.review.create({
+
+data:{
+
+rating:
+parseFloat(rating),
+
+comment,
+
+userId,
+
+productId
+
+}
+
+});
+
+
+
+// calculate average
+
+const reviews=
+
+await prisma.review
+.findMany({
+
+where:{
+
+productId
+
+}
+
+});
+
+
+
+const total=
+
+reviews.reduce(
+
+(sum,item)=>
+
+sum+item.rating,
+
+0
+
+);
+
+
+
+const average=
+
+reviews.length
+
+?
+
+total/reviews.length
+
+:
+
+0;
+
+
+
+await prisma.product.update({
+
+where:{
+
+id:productId
+
+},
+
+data:{
+
+rating:
+average
+
+}
+
+});
+
+
+
+res.status(201)
+
+.json({
+
+success:true,
+
+message:
+"Review added successfully"
+
+});
+
+
+}
+catch(error){
+
+console.log(error);
+
+res.status(500)
+
+.json({
+
+success:false,
+
+message:
+"Server Error"
+
+});
+
+}
+
 };
 
 
 
+
+
+
+
+// ==========================
 // GET PRODUCT REVIEWS
-const getProductReviews =
-  async (req, res) => {
+// ==========================
 
-    try {
+const getProductReviews=
+async(req,res)=>{
 
-      const { productId } = req.params;
+try{
 
-      const reviews =
-        await prisma.review.findMany({
-          where: {
-            productId
-          },
-
-          include: {
-            user: {
-              select: {
-                name: true,
-                profileImage: true
-              }
-            }
-          },
-
-          orderBy: {
-            createdAt: "desc"
-          }
-        });
-
-      res.status(200).json({
-        success: true,
-        totalReviews: reviews.length,
-        reviews
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-        message: "Server Error"
-      });
-    }
-  };
+const{
+productId
+}=req.params;
 
 
 
-// ADMIN REPLY REVIEW
-const replyReview = async (req, res) => {
+const reviews=
 
-  try {
+await prisma.review
+.findMany({
 
-    const { reviewId } = req.params;
+where:{
 
-    const { reply } = req.body;
+productId
 
-    if (!reply) {
-      return res.status(400).json({
-        success: false,
-        message: "Reply required"
-      });
-    }
+},
 
-    const updatedReview =
-      await prisma.review.update({
-        where: {
-          id: reviewId
-        },
+include:{
 
-        data: {
-          reply
-        }
-      });
+user:{
 
-    res.status(200).json({
-      success: true,
-      message: "Reply added",
-      updatedReview
-    });
+select:{
 
-  } catch (error) {
+name:true,
 
-    console.log(error);
+profileImage:true
 
-    res.status(500).json({
-      success: false,
-      message: "Server Error"
-    });
-  }
+}
+
+}
+
+},
+
+orderBy:{
+
+createdAt:
+"desc"
+
+}
+
+});
+
+
+
+res.status(200)
+
+.json({
+
+success:true,
+
+totalReviews:
+reviews.length,
+
+reviews
+
+});
+
+
+}
+catch(error){
+
+console.log(error);
+
+res.status(500)
+
+.json({
+
+success:false,
+
+message:
+"Server Error"
+
+});
+
+}
+
 };
 
 
 
+
+
+
+
+
+
+// ==========================
+// ADMIN REPLY
+// ==========================
+
+const replyReview=
+async(req,res)=>{
+
+try{
+
+const{
+reviewId
+}=req.params;
+
+
+const{
+reply
+}=req.body;
+
+
+
+if(!reply){
+
+return res.status(400)
+
+.json({
+
+success:false,
+
+message:
+"Reply required"
+
+});
+
+}
+
+
+
+const updatedReview=
+
+await prisma.review
+.update({
+
+where:{
+
+id:reviewId
+
+},
+
+data:{
+
+reply
+
+}
+
+});
+
+
+
+res.status(200)
+
+.json({
+
+success:true,
+
+message:
+"Reply added",
+
+updatedReview
+
+});
+
+
+
+}
+catch(error){
+
+console.log(error);
+
+res.status(500)
+
+.json({
+
+success:false,
+
+message:
+"Server Error"
+
+});
+
+}
+
+};
+
+
+
+
+
+
+
+
+
+// ==========================
 // SIMILAR PRODUCTS
-const getSimilarProducts =
-  async (req, res) => {
+// ==========================
 
-    try {
+const getSimilarProducts=
+async(req,res)=>{
 
-      const { productId } = req.params;
+try{
 
-      // get current product
-      const currentProduct =
-        await prisma.product.findUnique({
-          where: {
-            id: productId
-          }
-        });
-
-      if (!currentProduct) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found"
-        });
-      }
-
-      // similar products
-      const similarProducts =
-        await prisma.product.findMany({
-          where: {
-            categoryId:
-              currentProduct.categoryId,
-
-            NOT: {
-              id: productId
-            }
-          },
-
-          take: 4
-        });
-
-      res.status(200).json({
-        success: true,
-        similarProducts
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-        message: "Server Error"
-      });
-    }
-  };
+const{
+productId
+}=req.params;
 
 
 
+const currentProduct=
+
+await prisma.product
+.findUnique({
+
+where:{
+
+id:productId
+
+}
+
+});
+
+
+
+if(!currentProduct){
+
+return res.status(404)
+
+.json({
+
+success:false,
+
+message:
+"Product not found"
+
+});
+
+}
+
+
+
+const similarProducts=
+
+await prisma.product
+.findMany({
+
+where:{
+
+categoryId:
+currentProduct.categoryId,
+
+NOT:{
+
+id:productId
+
+}
+
+},
+
+take:4
+
+});
+
+
+
+res.status(200)
+
+.json({
+
+success:true,
+
+similarProducts
+
+});
+
+
+}
+catch(error){
+
+console.log(error);
+
+res.status(500)
+
+.json({
+
+success:false,
+
+message:
+"Server Error"
+
+});
+
+}
+
+};
+
+
+
+
+
+
+
+
+
+// ==========================
 // TOP RATED PRODUCTS
-const getTopRatedProducts =
-  async (req, res) => {
+// ==========================
 
-    try {
+const getTopRatedProducts=
+async(req,res)=>{
 
-      const products =
-        await prisma.product.findMany({
-          orderBy: {
-            rating: "desc"
-          },
+try{
 
-          take: 8
-        });
+const products=
 
-      res.status(200).json({
-        success: true,
-        products
-      });
+await prisma.product
+.findMany({
 
-    } catch (error) {
+orderBy:{
 
-      console.log(error);
+rating:
+"desc"
 
-      res.status(500).json({
-        success: false,
-        message: "Server Error"
-      });
-    }
-  };
+},
+
+take:8
+
+});
 
 
 
-module.exports = {
-  addReview,
-  getProductReviews,
-  replyReview,
-  getSimilarProducts,
-  getTopRatedProducts
+res.status(200)
+
+.json({
+
+success:true,
+
+products
+
+});
+
+
+}
+catch(error){
+
+console.log(error);
+
+res.status(500)
+
+.json({
+
+success:false,
+
+message:
+"Server Error"
+
+});
+
+}
+
+};
+
+
+
+module.exports={
+
+addReview,
+
+getProductReviews,
+
+replyReview,
+
+getSimilarProducts,
+
+getTopRatedProducts
+
 };
