@@ -1,115 +1,183 @@
-import {useEffect,useState} from "react";
+import {
+useEffect,
+useRef,
+useState
+} from "react";
+
 import axios from "axios";
 import toast from "react-hot-toast";
 
-import{
+import {
 FaRobot,
 FaTimes,
 FaPaperPlane,
-FaShoppingCart
+FaShoppingCart,
+FaSmile,
+FaInfoCircle
 }
 from "react-icons/fa";
 
-import {useAuth}
-from "../../context/AuthContext";
+import EmojiPicker
+from "emoji-picker-react";
+
+import {
+useNavigate
+}
+from "react-router-dom";
+
+import {
+useCart
+}
+from "../../context/CartContext";
 
 
 
 function AIChatbot(){
 
 
-const {user}=
-useAuth();
+const token=
+localStorage.getItem("token");
 
-
-// only logged in users
-if(!user) return null;
-
-
-
-const CHAT_KEY=
-`ai_chat_${user.id}`;
+if(!token)
+return null;
 
 
 
-const [open,setOpen]=
-useState(false);
+const userId=
 
-const [message,setMessage]=
-useState("");
+localStorage.getItem("userId")
 
-const [loading,setLoading]=
-useState(false);
+||
+
+localStorage.getItem("id")
+
+||
+
+"guest";
+
+
+
+const chatKey=
+`chat_${userId}`;
+
+
+
+const navigate=
+useNavigate();
+
+const{
+fetchCartCount
+}=useCart();
+
+
+const messagesEndRef=
+useRef(null);
 
 
 const[
-selectedProduct,
-setSelectedProduct
-]=useState(null);
+open,
+setOpen
+]=useState(false);
+
+const[
+message,
+setMessage
+]=useState("");
+
+const[
+loading,
+setLoading
+]=useState(false);
+
+const[
+showEmoji,
+setShowEmoji
+]=useState(false);
+
+
+const[
+messages,
+setMessages
+]=useState([
+
+{
+sender:"bot",
+text:
+"👋 Hi! Apnar ki lagbe? How can I help you today?"
+}
+
+]);
 
 
 
-const [messages,setMessages]=
-useState([]);
 
-
-
-
-// =========================
+// =======================
 // LOAD CHAT
-// =========================
+// =======================
 
 useEffect(()=>{
 
-
-const saved=
+const old=
 
 localStorage.getItem(
-CHAT_KEY
+chatKey
 );
 
 
-if(saved){
+if(old){
+
+try{
+
+const parsed=
+
+JSON.parse(old);
+
+
+if(
+Array.isArray(parsed)
+&&
+parsed.length>0
+){
 
 setMessages(
-JSON.parse(saved)
+parsed
 );
 
 }
-else{
+
+}
+catch{
 
 setMessages([
 
 {
-
 sender:"bot",
-
 text:
-"Hi 👋 Ki product lagbe? Budget bolleo hobe"
-
+"👋 Hi! Apnar ki lagbe? How can I help you today?"
 }
 
 ]);
 
 }
 
+}
 
 },[]);
 
 
 
 
-// =========================
+
+
+// =======================
 // SAVE CHAT
-// =========================
+// =======================
 
 useEffect(()=>{
 
-if(messages.length){
-
 localStorage.setItem(
 
-CHAT_KEY,
+chatKey,
 
 JSON.stringify(
 messages
@@ -117,32 +185,51 @@ messages
 
 );
 
-}
-
-},
-[messages]);
-
+},[
+messages
+]);
 
 
 
 
-// =========================
-// ADD CART
-// =========================
+
+
+
+
+// =======================
+// AUTO SCROLL
+// =======================
+
+useEffect(()=>{
+
+messagesEndRef.current
+?.scrollIntoView({
+
+behavior:
+"smooth"
+
+});
+
+},[
+messages
+]);
+
+
+
+
+
+
+
+
+
+// =======================
+// ADD TO CART
+// =======================
 
 const addToCart=
 async(productId)=>{
 
-
 try{
-
-
-const token=
-localStorage.getItem(
-"token"
-);
-
-
 
 await axios.post(
 
@@ -150,6 +237,130 @@ await axios.post(
 
 {
 productId
+},
+
+{
+headers:{
+Authorization:
+`Bearer ${token}`
+}
+}
+
+);
+
+await fetchCartCount();
+
+toast.success(
+"Added to cart 🛒"
+);
+
+}
+catch{
+
+toast.error(
+"Failed"
+);
+
+}
+
+};
+
+
+
+
+
+
+
+
+
+
+// =======================
+// SEND MESSAGE
+// =======================
+
+const sendMessage=
+async()=>{
+
+
+if(!message.trim())
+return;
+
+
+
+const current=
+message;
+
+
+
+const updated=[
+
+...messages,
+
+{
+
+sender:"user",
+
+text:current
+
+}
+
+];
+
+
+setMessages(
+updated
+);
+
+
+setMessage("");
+
+
+
+try{
+
+
+setLoading(true);
+
+
+
+const history=
+
+updated
+
+.slice(-10)
+
+.map(x=>({
+
+role:
+
+x.sender==="user"
+
+?
+
+"user"
+
+:
+
+"assistant",
+
+content:
+x.text
+
+}));
+
+
+
+const res=
+await axios.post(
+
+"http://localhost:5000/api/ai/chat",
+
+{
+
+message:current,
+
+history
+
 },
 
 {
@@ -167,84 +378,90 @@ Authorization:
 
 
 
-toast.success(
-"Added to cart 🔥"
-);
+
+// frontend safety filter
+
+let filteredProducts=
+
+res.data.products || [];
 
 
-}
-catch{
-
-toast.error(
-"Login first"
-);
-
-}
-
-};
-
-
-
-
-// =========================
-// SEND
-// =========================
-
-const sendMessage=
-async()=>{
-
-if(!message.trim())
-return;
-
-
-const current=
-message;
-
-
-
-// user message
-
-setMessages(prev=>[
-
-...prev,
-
-{
-
-sender:"user",
-text:current
-
-}
-
-]);
-
-
-setMessage("");
-
-
-
-// detect agreement
 
 const lower=
+
 current.toLowerCase();
 
 
 if(
+lower.includes(
+"keyboard"
+)
+){
 
-selectedProduct &&
+filteredProducts=
 
-(
+filteredProducts.filter(
 
-lower.includes("haan") ||
+p=>
 
-lower.includes("yes") ||
-
-lower.includes("dao") ||
-
-lower.includes("add")
-
+p.title
+.toLowerCase()
+.includes(
+"keyboard"
 )
 
+);
+
+}
+
+
+if(
+lower.includes(
+"mouse"
+)
 ){
+
+filteredProducts=
+
+filteredProducts.filter(
+
+p=>
+
+p.title
+.toLowerCase()
+.includes(
+"mouse"
+)
+
+);
+
+}
+
+
+if(
+lower.includes(
+"camera"
+)
+){
+
+filteredProducts=
+
+filteredProducts.filter(
+
+p=>
+
+p.title
+.toLowerCase()
+.includes(
+"camera"
+)
+
+);
+
+}
+
+
+
 
 
 setMessages(prev=>[
@@ -256,123 +473,31 @@ setMessages(prev=>[
 sender:"bot",
 
 text:
-"Awesome 🔥 Cart e add kore dicchi"
-
-}
-
-]);
-
-
-addToCart(
-selectedProduct.id
-);
-
-
-return;
-
-}
-
-
-
-
-try{
-
-
-setLoading(true);
-
-
-
-const res=
-await axios.post(
-
-"http://localhost:5000/api/ai/chat",
-
-{
-
-message:
-current
-
-}
-
-);
-
-
-
-const aiText=
 
 res.data.aiReply ||
 
-"Kono response nai";
+"No response",
 
 
-
-const products=
-
-res.data.products || [];
-
-
-if(products.length){
-
-setSelectedProduct(
-products[0]
-);
-
-}
-
-
-
-setTimeout(()=>{
-
-
-setMessages(prev=>[
-
-...prev,
-
-{
-
-sender:"bot",
-
-text:aiText,
-
-products,
-
-showCart:false
+products:
+filteredProducts
 
 }
 
 ]);
-
-
-
-},1000);
-
 
 
 }
 catch(error){
 
-
 console.log(error);
 
-
-setMessages(prev=>[
-
-...prev,
-
-{
-
-sender:"bot",
-
-text:
-"Kisu problem hoise 😔"
+toast.error(
+"AI Failed"
+);
 
 }
 
-]);
-
-
-
-}
 
 setLoading(false);
 
@@ -383,10 +508,12 @@ setLoading(false);
 
 
 
+
+
+
 return(
 
 <>
-
 
 <button
 
@@ -395,10 +522,7 @@ btn
 btn-warning
 rounded-circle
 position-fixed
-bottom-0
-end-0
-m-4
-shadow
+shadow-lg
 "
 
 style={{
@@ -406,7 +530,10 @@ style={{
 width:"70px",
 height:"70px",
 
-zIndex:99999
+right:"20px",
+bottom:"20px",
+
+zIndex:9999
 
 }}
 
@@ -424,11 +551,11 @@ open
 
 ?
 
-<FaTimes/>
+<FaTimes size={22}/>
 
 :
 
-<FaRobot/>
+<FaRobot size={22}/>
 
 }
 
@@ -442,25 +569,42 @@ open
 
 {
 
-open && (
+open&&(
 
 <div
 
 className="
 card
-position-fixed
-bottom-0
-end-0
-m-5
 shadow-lg
+border-0
+position-fixed
 "
 
 style={{
 
-width:"380px",
-height:"580px",
+width:
 
-zIndex:99999
+window.innerWidth<768
+
+?
+
+"95%"
+
+:
+
+"390px",
+
+height:"620px",
+
+bottom:"100px",
+
+right:"20px",
+
+zIndex:9999,
+
+borderRadius:"20px",
+
+overflow:"hidden"
 
 }}
 
@@ -471,14 +615,71 @@ zIndex:99999
 className="
 bg-dark
 text-white
-fw-bold
 p-3
+fw-bold
+d-flex
+justify-content-between
+align-items-center
 "
 >
 
+<span>
+
 AI Shopping Assistant 🤖
 
+</span>
+
+
+
+<button
+
+className="
+btn
+btn-sm
+text-white
+"
+
+onClick={()=>{
+
+const starter=[
+
+{
+
+sender:"bot",
+
+text:
+"👋 Hi! Apnar ki lagbe? How can I help you today?"
+
+}
+
+];
+
+
+setMessages(
+starter
+);
+
+
+localStorage.setItem(
+
+chatKey,
+
+JSON.stringify(
+starter
+)
+
+);
+
+}}
+
+>
+
+Clear
+
+</button>
+
 </div>
+
 
 
 
@@ -488,17 +689,15 @@ AI Shopping Assistant 🤖
 
 className="p-3"
 
-style={
+style={{
 
-{
+height:"470px",
 
-height:"450px",
+overflowY:"auto",
 
-overflowY:"auto"
+background:"#f5f7fb"
 
-}
-
-}
+}}
 
 >
 
@@ -507,7 +706,6 @@ overflowY:"auto"
 messages.map(
 
 (msg,index)=>(
-
 
 <div
 
@@ -534,8 +732,8 @@ msg.sender==="user"
 className={`
 
 d-inline-block
-rounded
 p-2
+rounded-4
 mb-2
 
 ${
@@ -548,11 +746,17 @@ msg.sender==="user"
 
 :
 
-"bg-light"
+"bg-white shadow-sm"
 
 }
 
 `}
+
+style={{
+
+maxWidth:"85%"
+
+}}
 
 >
 
@@ -577,7 +781,8 @@ key={product.id}
 className="
 card
 p-2
-mb-2
+mb-3
+shadow-sm
 "
 
 >
@@ -594,15 +799,17 @@ product.images?.[0]
 
 }
 
-height="110"
+height="120"
 
 style={{
 
-objectFit:"cover"
+objectFit:"cover",
+borderRadius:"10px"
 
 }}
 
 />
+
 
 
 <h6
@@ -622,47 +829,65 @@ Tk {product.price}
 
 
 
+<div
+className="
+d-flex
+gap-2
+"
+>
+
 <button
 
 className="
 btn
 btn-outline-dark
-btn-sm
+w-50
 "
 
-onClick={()=>{
+onClick={()=>
 
+navigate(
 
-setSelectedProduct(
-product
-);
+`/product/${product.id}`
 
-
-setMessages(prev=>[
-
-...prev,
-
-{
-
-sender:"bot",
-
-text:
-`${product.title} budget hishebe khub valo 🔥 RGB + comfortable grip ase. Cart e add kore dibo?`
+)
 
 }
 
-]);
-
-
-
-}}
-
 >
+
+<FaInfoCircle/>
 
 Details
 
 </button>
 
+
+
+<button
+
+className="
+btn
+btn-warning
+w-50
+"
+
+onClick={()=>
+
+addToCart(
+product.id
+)
+
+}
+
+>
+
+<FaShoppingCart/>
+
+</button>
+
+</div>
+
 </div>
 
 )
@@ -678,25 +903,80 @@ Details
 )
 
 }
+
+
+
+{
+
+loading&&
+
+<div
+className="
+text-muted
+small
+"
+>
+
+Typing...
+
+</div>
+
+}
+
+
+<div ref={messagesEndRef}/>
+
+</div>
+
+
 
 
 
 
 {
 
-loading && (
+showEmoji&&(
 
-<p>
+<div
 
-Typing...
+style={{
 
-</p>
+position:"absolute",
+
+bottom:"70px",
+
+left:"10px",
+
+zIndex:99999
+
+}}
+
+>
+
+<EmojiPicker
+
+height={350}
+width={300}
+
+onEmojiClick={(e)=>{
+
+setMessage(
+
+prev=>
+
+prev+e.emoji
+
+)
+
+}}
+
+/>
+
+</div>
 
 )
 
 }
-
-</div>
 
 
 
@@ -704,24 +984,46 @@ Typing...
 
 
 <div
-
 className="
 border-top
 p-2
 d-flex
 gap-2
+bg-white
+"
+>
+
+<button
+
+className="
+btn btn-light
 "
 
+onClick={()=>
+
+setShowEmoji(
+!showEmoji
+)
+
+}
+
 >
+
+<FaSmile/>
+
+</button>
+
+
 
 <input
 
 className="
 form-control
+rounded-pill
 "
 
 placeholder="
-2k er moddhe gaming mouse lagbe
+Type message...
 "
 
 value={message}
@@ -737,9 +1039,7 @@ e.target.value
 onKeyDown={(e)=>{
 
 if(
-
 e.key==="Enter"
-
 ){
 
 sendMessage()
@@ -748,7 +1048,7 @@ sendMessage()
 
 }}
 
- />
+/>
 
 
 <button
@@ -756,9 +1056,12 @@ sendMessage()
 className="
 btn
 btn-warning
+rounded-circle
 "
 
-onClick={sendMessage}
+onClick={
+sendMessage
+}
 
 >
 
@@ -766,22 +1069,18 @@ onClick={sendMessage}
 
 </button>
 
-
 </div>
-
 
 </div>
 
 )
 
 }
-
 
 </>
 
 )
 
 }
-
 
 export default AIChatbot;

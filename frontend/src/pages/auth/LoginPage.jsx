@@ -45,6 +45,7 @@ function LoginPage() {
 
       email: "",
       password: ""
+
     });
 
 
@@ -52,9 +53,11 @@ function LoginPage() {
     useState(false);
 
 
+
   // =========================
   // INPUT CHANGE
   // =========================
+
   const handleChange =
     (e) => {
 
@@ -64,13 +67,17 @@ function LoginPage() {
 
         [e.target.name]:
           e.target.value
+
       });
+
     };
+
 
 
   // =========================
   // SUBMIT
   // =========================
+
   const handleSubmit =
     async (e) => {
 
@@ -80,11 +87,16 @@ function LoginPage() {
 
         setLoading(true);
 
+
         const response =
           await api.post(
+
             "/auth/login",
+
             formData
+
           );
+
 
 
         // SUCCESS
@@ -92,107 +104,199 @@ function LoginPage() {
           response.data.success
         ) {
 
-          // LOGIN SAVE
+
+          // LOGIN CONTEXT
           login(
 
             response.data.token,
 
             response.data.user
+
           );
 
 
-          // REALTIME NAVBAR COUNT
+
+          // ======================
+          // SAVE LOCAL STORAGE
+          // ======================
+
+          localStorage.setItem(
+
+            "token",
+
+            response.data.token
+
+          );
+
+
+          localStorage.setItem(
+
+            "user",
+
+            JSON.stringify(
+
+              response.data.user
+
+            )
+
+          );
+
+
+
+          // IMPORTANT
+          // AI CHAT USER MEMORY
+
+          localStorage.setItem(
+
+            "userId",
+
+            response.data.user.id
+
+          );
+
+
+
+
+          // ======================
+          // UPDATE NAVBAR COUNTS
+          // ======================
+
           await fetchCartCount();
 
           await fetchWishlistCount();
 
 
+
+
           toast.success(
-            "Login Successful"
+            "Login Successful 🎉"
           );
 
+
+
           navigate("/");
+
         }
 
-      } catch (error) {
+      }
+      catch (error) {
+
+        console.log(error);
+
 
         toast.error(
 
-          error.response?.data?.message ||
+          error.response?.data?.message
+
+          ||
 
           "Login Failed"
+
         );
 
-      } finally {
+      }
+      finally {
 
         setLoading(false);
+
       }
+
     };
+
+
 
 
 
   return (
 
     <>
+
       <Navbar />
 
+
+
       <div
+
         className="
         container
         d-flex
         justify-content-center
         align-items-center
         "
+
         style={{
-          minHeight: "90vh"
+          minHeight:"90vh"
         }}
+
       >
 
+
         <div
+
           className="
           card
           shadow-lg
           border-0
           p-4
           "
+
           style={{
-            width: "400px",
-            borderRadius: "15px"
+
+            width:"400px",
+
+            borderRadius:"20px"
+
           }}
+
         >
 
-          {/* TITLE */}
+
+
           <h2
+
             className="
             text-center
             mb-4
             fw-bold
             "
+
           >
+
             Login
+
           </h2>
 
 
-          {/* FORM */}
+
+
+
           <form
             onSubmit={
               handleSubmit
             }
           >
 
+
             {/* EMAIL */}
+
             <div className="mb-3">
 
               <label
+
                 className="
                 form-label
                 fw-semibold
                 "
+
               >
+
                 Email
+
               </label>
 
+
               <input
+
                 type="email"
 
                 className="
@@ -211,24 +315,35 @@ function LoginPage() {
                 }
 
                 required
+
               />
 
             </div>
 
 
+
+
+
             {/* PASSWORD */}
+
             <div className="mb-4">
 
               <label
+
                 className="
                 form-label
                 fw-semibold
                 "
+
               >
+
                 Password
+
               </label>
 
+
               <input
+
                 type="password"
 
                 className="
@@ -247,49 +362,68 @@ function LoginPage() {
                 }
 
                 required
+
               />
 
             </div>
 
 
-            {/* BUTTON */}
+
+
+
             <button
+
               type="submit"
 
               disabled={loading}
 
               className="
-              btn btn-warning
+              btn
+              btn-warning
               w-100
               fw-bold
               py-2
               "
+
             >
 
               {
+
                 loading
 
-                  ? "Loading..."
+                ?
 
-                  : "Login"
+                "Loading..."
+
+                :
+
+                "Login"
+
               }
 
             </button>
 
+
           </form>
 
 
-          {/* REGISTER */}
+
+
+
           <p
+
             className="
             text-center
             mt-4
             "
+
           >
 
             Don't have an account?
 
+
             <Link
+
               to="/register"
 
               className="
@@ -297,8 +431,11 @@ function LoginPage() {
               fw-bold
               text-decoration-none
               "
+
             >
+
               Register
+
             </Link>
 
           </p>
@@ -306,8 +443,11 @@ function LoginPage() {
         </div>
 
       </div>
+
     </>
+
   );
+
 }
 
 export default LoginPage;

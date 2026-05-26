@@ -14,135 +14,226 @@ import {
 } from "../services/wishlistService";
 
 
-
 const CartContext =
   createContext();
 
 
 
+// =======================
 // PROVIDER
+// =======================
+
 export function CartProvider({
   children
 }) {
 
-  const [cartCount, setCartCount] =
-    useState(0);
-
-  const [wishlistCount,
-    setWishlistCount] =
-    useState(0);
+  const [
+    cartCount,
+    setCartCount
+  ]=useState(0);
 
 
-  // =========================
-  // FETCH CART COUNT
-  // =========================
-  const fetchCartCount =
-    async () => {
+  const [
+    wishlistCount,
+    setWishlistCount
+  ]=useState(0);
 
-      try {
 
-        const token =
-          localStorage.getItem("token");
 
-        // logout hole reset
-        if (!token) {
 
-          setCartCount(0);
+  // =======================
+  // CART COUNT
+  // =======================
 
-          return;
-        }
+  const fetchCartCount=
+  async()=>{
 
-        const data =
-          await getCart();
+    try{
 
-        setCartCount(
-          data.cartItems?.length || 0
-        );
+      const token=
+      localStorage.getItem(
+      "token"
+      );
 
-      } catch (error) {
+
+      if(!token){
 
         setCartCount(0);
+
+        return;
+
       }
-    };
 
 
-  // =========================
-  // FETCH WISHLIST COUNT
-  // =========================
-  const fetchWishlistCount =
-    async () => {
 
-      try {
+      const data=
+      await getCart();
 
-        const token =
-          localStorage.getItem("token");
 
-        // logout hole reset
-        if (!token) {
 
-          setWishlistCount(0);
+      setCartCount(
 
-          return;
-        }
+      data?.cartItems?.length
 
-        const data =
-          await getWishlist();
+      ||
 
-        setWishlistCount(
-          data.wishlist?.length || 0
-        );
+      0
 
-      } catch (error) {
+      );
+
+    }
+
+    catch(error){
+
+      console.log(error);
+
+      setCartCount(0);
+
+    }
+
+  };
+
+
+
+
+
+
+
+  // =======================
+  // WISHLIST COUNT
+  // =======================
+
+  const fetchWishlistCount=
+  async()=>{
+
+    try{
+
+
+      const token=
+      localStorage.getItem(
+      "token"
+      );
+
+
+      if(!token){
 
         setWishlistCount(0);
+
+        return;
+
       }
-    };
 
 
-  // =========================
-  // RESET COUNTS
-  // =========================
-  const resetCounts = () => {
+
+      const data=
+      await getWishlist();
+
+
+
+      setWishlistCount(
+
+      data?.wishlist?.length
+
+      ||
+
+      0
+
+      );
+
+    }
+
+    catch(error){
+
+      console.log(error);
+
+      setWishlistCount(0);
+
+    }
+
+  };
+
+
+
+
+
+
+
+
+  // =======================
+  // RESET
+  // =======================
+
+  const resetCounts=()=>{
 
     setCartCount(0);
 
     setWishlistCount(0);
+
   };
 
 
-  useEffect(() => {
+
+
+
+
+
+  useEffect(()=>{
 
     fetchCartCount();
 
     fetchWishlistCount();
 
-  }, []);
+  },[]);
 
 
-  return (
 
-    <CartContext.Provider
 
-      value={{
 
-        cartCount,
-        wishlistCount,
 
-        fetchCartCount,
-        fetchWishlistCount,
 
-        resetCounts
-      }}
-    >
+  return(
 
-      {children}
+  <CartContext.Provider
 
-    </CartContext.Provider>
+  value={{
+
+    cartCount,
+
+    wishlistCount,
+
+    fetchCartCount,
+
+    fetchWishlistCount,
+
+    setCartCount,
+
+    setWishlistCount,
+
+    resetCounts
+
+  }}
+
+  >
+
+  {children}
+
+  </CartContext.Provider>
+
   );
+
 }
 
 
 
+
+// =======================
 // HOOK
-export const useCart = () =>
-  useContext(CartContext);
+// =======================
+
+export const useCart=()=>{
+
+return useContext(
+CartContext
+);
+
+};

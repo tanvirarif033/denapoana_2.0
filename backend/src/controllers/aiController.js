@@ -1,4 +1,4 @@
-const prisma =
+const prisma=
 require("../config/prisma");
 
 const {
@@ -7,38 +7,20 @@ generateAIResponse
 
 
 
-
-// ======================
-// AI CHAT
-// ======================
-
 const aiChat=
 async(req,res)=>{
 
 try{
 
-const {message}=req.body;
+const{
+message,
+history=[]
+}=req.body;
 
 
-if(!message){
-
-return res.status(400)
-.json({
-
-success:false,
-
-message:
-"Message required"
-
-});
-
-}
-
-
-
-const lower=
-
+const text=
 message.toLowerCase();
+
 
 
 
@@ -48,12 +30,12 @@ let budget=null;
 
 const budgetMatch=
 
-lower.match(/\d+/);
+text.match(/\d+/);
 
 if(budgetMatch){
 
 budget=
-Number(
+parseInt(
 budgetMatch[0]
 );
 
@@ -62,94 +44,93 @@ budgetMatch[0]
 
 
 
-// keywords
 
-const words=
+// intent detect
 
-lower
+const categories=[
 
-.split(" ")
+"keyboard",
+"mouse",
+"camera",
+"laptop",
+"phone",
+"headphone"
 
-.filter(
-
-word=>
-
-word.length>2
-
-);
+];
 
 
+let detected="";
 
 
-// build query
+for(let item of categories){
+
+if(
+text.includes(item)
+){
+
+detected=item;
+
+break;
+
+}
+
+}
+
+
+
+
 
 let where={};
 
 
 
+if(detected){
+
 where.OR=[
 
-...words.map(
-
-word=>({
+{
 
 title:{
 
-contains:word,
+contains:detected,
 
-mode:
-"insensitive"
+mode:"insensitive"
 
 }
 
-})
+},
 
-),
-
-
-
-...words.map(
-
-word=>({
+{
 
 description:{
 
-contains:word,
+contains:detected,
 
-mode:
-"insensitive"
+mode:"insensitive"
 
 }
 
-})
+},
 
-),
-
-
-...words.map(
-
-word=>({
+{
 
 category:{
 
 name:{
 
-contains:word,
+contains:detected,
 
-mode:
-"insensitive"
+mode:"insensitive"
+
+}
 
 }
 
 }
-
-})
-
-)
 
 ];
 
-
+}
 
 
 
@@ -162,8 +143,6 @@ lte:budget
 };
 
 }
-
-
 
 
 
@@ -188,99 +167,47 @@ take:5
 
 
 
-
-// fallback
-
-if(products.length===0){
-
-const allProducts=
-
-await prisma.product.findMany({
-
-include:{
-
-category:true
-
-},
-
-take:5
-
-});
-
-products.push(
-...allProducts
-);
-
-}
-
-
-
-
-
-
-
-
-// build product text
-
 let productText="";
-
 
 products.forEach(
 
-(product)=>{
+p=>{
 
-productText +=`
+productText+=`
 
-Product:
+Name:${p.title}
 
-${product.title}
+Price:${p.price}
 
-Price:
+Description:${p.description}
 
-Tk ${product.price}
-
-Description:
-
-${product.description}
-
-Category:
-
-${
-
-product.category?.name
-
-||
-
-"No category"
-
-}
-
-Rating:
-
-${product.rating}
+Category:${p.category?.name}
 
 `;
 
-}
-
-);
-
-
-
-
-
+});
 
 
 
 const prompt=`
 
-Customer said:
+Previous chat:
+
+${history.map(
+
+x=>
+
+`${x.role}:${x.content}`
+
+).join("\n")}
+
+
+User:
 
 ${message}
 
 
-
-Products from database:
+Products:
 
 ${productText}
 
@@ -288,26 +215,20 @@ ${productText}
 
 Rules:
 
-Talk Bangla/Banglish.
+If products empty say:
 
-Recommend naturally.
+"Ei category te product pawa jai nai"
 
-Convince politely.
 
-Use actual descriptions.
+Never recommend unrelated products.
 
-Do not invent features.
+If user selects a product then later ask:
 
-Ask follow up questions.
+"Ar kichu lagbe?"
 
-Suggest only relevant products.
+Only then suggest related accessories.
 
 `;
-
-
-
-
-
 
 
 
@@ -320,11 +241,7 @@ prompt
 
 
 
-
-
-res.status(200)
-
-.json({
+res.json({
 
 success:true,
 
@@ -332,30 +249,23 @@ aiReply:
 
 aiReply ||
 
-"Ei gula dekhte paren 👇",
+"Ei category te kichu pawa jai nai",
 
 products
 
 });
 
 
-
 }
-
 catch(error){
 
-console.log(
-error
-);
+console.log(error);
 
 res.status(500)
 
 .json({
 
-success:false,
-
-message:
-"AI server error"
+success:false
 
 });
 
@@ -369,10 +279,6 @@ message:
 
 
 
-// ======================
-// AI ADD TO CART
-// ======================
-
 const aiAddToCart=
 async(req,res)=>{
 
@@ -381,42 +287,10 @@ try{
 const userId=
 req.user.id;
 
-const {
+
+const{
 productId
 }=req.body;
-
-
-
-const product=
-
-await prisma.product
-.findUnique({
-
-where:{
-id:productId
-}
-
-});
-
-
-
-if(!product){
-
-return res
-.status(404)
-
-.json({
-
-success:false,
-
-message:
-"Product not found"
-
-});
-
-}
-
-
 
 
 const existing=
@@ -427,7 +301,6 @@ await prisma.cart
 where:{
 
 userId,
-
 productId
 
 }
@@ -438,8 +311,7 @@ productId
 
 if(existing){
 
-await prisma.cart
-.update({
+await prisma.cart.update({
 
 where:{
 
@@ -461,13 +333,11 @@ existing.quantity+1
 }
 else{
 
-await prisma.cart
-.create({
+await prisma.cart.create({
 
 data:{
 
 userId,
-
 productId
 
 }
@@ -477,34 +347,37 @@ productId
 }
 
 
+const count=
 
-res.status(200)
+await prisma.cart.count({
 
-.json({
+where:{
 
-success:true,
+userId
 
-message:
-
-"Added to cart"
+}
 
 });
 
 
 
+res.json({
+
+success:true,
+
+cartCount:count
+
+});
+
+
 }
 catch(error){
-
-console.log(error);
 
 res.status(500)
 
 .json({
 
-success:false,
-
-message:
-"Server Error"
+success:false
 
 });
 
@@ -513,14 +386,9 @@ message:
 };
 
 
-
-
-
-
 module.exports={
 
 aiChat,
-
 aiAddToCart
 
 };

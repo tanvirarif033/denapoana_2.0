@@ -13,8 +13,9 @@ const router = express.Router();
 
 // AI CHAT
 router.post(
-  "/chat",
-  aiChat
+"/chat",
+authMiddleware,
+aiChat
 );
 
 

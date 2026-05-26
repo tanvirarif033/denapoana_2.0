@@ -1,25 +1,36 @@
-const express = require("express");
+const express =
+require("express");
 
-const router = express.Router();
+const router =
+express.Router();
 
-const upload =
-  require("../middlewares/uploadMiddleware");
+const upload=
+require(
+"../middlewares/uploadMiddleware"
+);
 
-const authMiddleware =
-  require("../middlewares/authMiddleware");
+const authMiddleware=
+require(
+"../middlewares/authMiddleware"
+);
 
-const adminMiddleware =
-  require("../middlewares/adminMiddleware");
+const adminMiddleware=
+require(
+"../middlewares/adminMiddleware"
+);
 
 const {
 
-  createProduct,
-  getProducts,
-  getSingleProduct,
-  updateProduct,
-  deleteProduct
+createProduct,
+getProducts,
+getSingleProduct,
+getSimilarProducts,
+updateProduct,
+deleteProduct
 
-} = require("../controllers/productController");
+}=require(
+"../controllers/productController"
+);
 
 
 
@@ -28,12 +39,23 @@ const {
 // ===================================
 
 router.post(
-  "/",
-  authMiddleware,
-  adminMiddleware,
-  upload.array("images", 5),
-  createProduct
+
+"/",
+
+authMiddleware,
+
+adminMiddleware,
+
+upload.array(
+"images",
+5
+),
+
+createProduct
+
 );
+
+
 
 
 // ===================================
@@ -41,9 +63,28 @@ router.post(
 // ===================================
 
 router.get(
-  "/",
-  getProducts
+"/",
+getProducts
 );
+
+
+
+
+// ===================================
+// SIMILAR PRODUCTS
+// IMPORTANT:
+// must be before /:id
+// ===================================
+
+router.get(
+
+"/similar/:productId",
+
+getSimilarProducts
+
+);
+
+
 
 
 // ===================================
@@ -51,9 +92,14 @@ router.get(
 // ===================================
 
 router.get(
-  "/:id",
-  getSingleProduct
+
+"/:id",
+
+getSingleProduct
+
 );
+
+
 
 
 // ===================================
@@ -61,12 +107,23 @@ router.get(
 // ===================================
 
 router.put(
-  "/:id",
-  authMiddleware,
-  adminMiddleware,
-  upload.array("images", 5),
-  updateProduct
+
+"/:id",
+
+authMiddleware,
+
+adminMiddleware,
+
+upload.array(
+"images",
+5
+),
+
+updateProduct
+
 );
+
+
 
 
 // ===================================
@@ -74,11 +131,18 @@ router.put(
 // ===================================
 
 router.delete(
-  "/:id",
-  authMiddleware,
-  adminMiddleware,
-  deleteProduct
+
+"/:id",
+
+authMiddleware,
+
+adminMiddleware,
+
+deleteProduct
+
 );
 
 
-module.exports = router;
+
+module.exports=
+router;
